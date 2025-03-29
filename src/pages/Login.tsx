@@ -303,7 +303,7 @@ const LoginPage = () => {
               
               <Button 
                 variant="outline" 
-                className="w-full font-bold border-3 border-black bg-white hover:bg-gray-50 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform h-12"
+                className="w-full font-bold border-3 border-black bg-white hover:bg-gray-50 text-black hover:text-black shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform h-12"
                 onClick={handleOAuthSignIn}
                 disabled={isOAuthLoading}
               >
