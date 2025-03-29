@@ -18,10 +18,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
+    console.log("Setting up auth state listener");
+    
     // Handle auth state changes, including redirect results
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
+        
+        // Update state with the new session information
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
@@ -31,12 +35,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           detail: { event, session: currentSession }
         });
         window.dispatchEvent(authEvent);
+        
+        // Log the auth state change to help with debugging
+        console.log("Auth session changed:", {
+          event,
+          session: currentSession
+        });
       }
     );
 
     // Check for existing session
     const initializeAuth = async () => {
       try {
+        console.log("Checking for existing session");
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -56,11 +67,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("Cleaning up auth subscription");
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
     try {
+      console.log("Signing out");
       await supabase.auth.signOut();
     } catch (error) {
       console.error("Error signing out:", error);
