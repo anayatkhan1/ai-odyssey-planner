@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
@@ -153,7 +152,6 @@ const TravelChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Focus input when chat opens
   useEffect(() => {
     if (isChatOpen && inputRef.current) {
       setTimeout(() => {
@@ -275,7 +273,6 @@ const TravelChat = () => {
     }
   };
 
-  // Dialog version of the chat for fullscreen mode
   const renderChatContent = () => (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="flex items-center justify-between p-3 bg-travel-blue text-white border-b border-travel-blue/20">
@@ -353,14 +350,12 @@ const TravelChat = () => {
 
   return (
     <>
-      {/* Fullscreen dialog version */}
       <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
         <DialogContent className="p-0 sm:max-w-[600px] max-h-[80vh] h-[600px] border-travel-blue/10">
           {renderChatContent()}
         </DialogContent>
       </Dialog>
     
-      {/* Floating chat button */}
       <motion.div 
         className="fixed bottom-6 right-6 z-50"
         initial={{ scale: 0.8, opacity: 0 }}
@@ -402,7 +397,6 @@ const TravelChat = () => {
         </Button>
       </motion.div>
       
-      {/* Popup chat window */}
       <AnimatePresence>
         {isChatOpen && !isFullscreen && (
           <motion.div
@@ -417,16 +411,6 @@ const TravelChat = () => {
             className="fixed bottom-24 right-6 z-50 w-full max-w-md"
           >
             <Card className="flex h-[500px] max-h-[80vh] flex-col overflow-hidden shadow-lg bg-white">
-              <div className="absolute right-3 top-3 z-10">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsFullscreen(true)}
-                  className="h-8 w-8 rounded-full bg-white/90 border-gray-200 hover:bg-white"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
               {renderChatContent()}
             </Card>
           </motion.div>
