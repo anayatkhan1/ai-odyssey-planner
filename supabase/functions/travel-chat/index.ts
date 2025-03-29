@@ -14,10 +14,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Get embeddings using Anthropic's API
+// Get embeddings using Anthropic's API - simplified for reliability
 async function getEmbeddings(text: string) {
   try {
-    console.log("Getting embeddings for text:", text.slice(0, 50) + "...");
+    console.log("Getting embeddings for text:", text.slice(0, 30) + "...");
     
     const response = await fetch('https://api.anthropic.com/v1/embeddings', {
       method: 'POST',
@@ -34,36 +34,23 @@ async function getEmbeddings(text: string) {
     });
 
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error(`Anthropic Embeddings API error (${response.status}):`, errorData);
-      throw new Error(`Anthropic Embeddings API returned ${response.status}: ${errorData}`);
+      throw new Error(`Anthropic Embeddings API returned ${response.status}`);
     }
 
     const data = await response.json();
-    console.log("Successfully received embeddings");
     return data.embedding;
   } catch (error) {
     console.error('Error getting embeddings:', error);
-    // Return null instead of throwing to allow fallback behavior
     return null;
   }
 }
 
-// Retrieve relevant documents for RAG
+// Simplified document retrieval
 async function getRelevantDocuments(query: string, limit = 3) {
   try {
-    // Get embeddings for the query
     const embedding = await getEmbeddings(query);
-    
-    // If no embedding could be generated, return empty array
-    if (!embedding) {
-      console.log("No embedding was generated, skipping document retrieval");
-      return [];
-    }
+    if (!embedding) return [];
 
-    console.log("Searching for relevant documents with embedding");
-    
-    // Search for similar documents in the database
     const { data: documents, error } = await supabase
       .rpc('match_travel_documents', {
         query_embedding: embedding,
@@ -71,24 +58,17 @@ async function getRelevantDocuments(query: string, limit = 3) {
         match_count: limit
       });
 
-    if (error) {
-      console.error('Error calling match_travel_documents RPC:', error);
-      throw error;
-    }
-    
-    console.log(`Found ${documents?.length || 0} relevant documents`);
+    if (error) throw error;
     return documents || [];
   } catch (error) {
-    console.error('Error retrieving relevant documents:', error);
+    console.error('Error retrieving documents:', error);
     return [];
   }
 }
 
-// Function to get chat history for a session
-async function getChatHistory(sessionId: string, limit = 10) {
+// Simplified chat history retrieval
+async function getChatHistory(sessionId: string, limit = 5) {
   try {
-    console.log(`Fetching chat history for session ${sessionId}`);
-    
     const { data, error } = await supabase
       .from('travel_chat_history')
       .select('*')
@@ -96,12 +76,7 @@ async function getChatHistory(sessionId: string, limit = 10) {
       .order('created_at', { ascending: false })
       .limit(limit);
     
-    if (error) {
-      console.error('Error fetching chat history:', error);
-      return [];
-    }
-    
-    console.log(`Retrieved ${data.length} chat history messages`);
+    if (error) throw error;
     return data.reverse();
   } catch (error) {
     console.error('Error in getChatHistory:', error);
@@ -110,29 +85,24 @@ async function getChatHistory(sessionId: string, limit = 10) {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log("Received request to travel-chat function");
-    
     const { message, sessionId, userId } = await req.json();
     
     if (!message || !sessionId) {
-      throw new Error("Missing required parameters: message and sessionId");
+      throw new Error("Missing required parameters");
     }
     
-    console.log(`Processing message for session ${sessionId}`);
-    
-    // Check if Anthropic API key is available
+    // Basic validation of API key
     if (!anthropicApiKey) {
-      console.error("No Anthropic API key found in environment variables");
       throw new Error("Anthropic API key is not configured");
     }
     
-    // Store user message in chat history
+    // Store user message
     try {
       await supabase.from('travel_chat_history').insert({
         session_id: sessionId,
@@ -140,21 +110,15 @@ serve(async (req) => {
         role: 'user',
         content: message
       });
-      console.log("Stored user message in chat history");
     } catch (error) {
       console.error("Failed to store user message:", error);
-      // Continue even if storing the message fails
     }
 
-    // Get relevant travel documents for RAG
-    console.log("Retrieving relevant documents for RAG");
+    // Get relevant docs and chat history
     const relevantDocs = await getRelevantDocuments(message);
+    const chatHistory = await getChatHistory(sessionId);
     
-    // Get recent chat history
-    console.log("Retrieving recent chat history");
-    const chatHistory = await getChatHistory(sessionId, 5);
-    
-    // Format chat history for Claude
+    // Format history for Claude
     const formattedHistory = chatHistory.map(msg => ({
       role: msg.role,
       content: msg.content
@@ -163,11 +127,8 @@ serve(async (req) => {
     // Prepare context from relevant documents
     let ragContext = "";
     if (relevantDocs.length > 0) {
-      console.log(`Including ${relevantDocs.length} relevant documents in context`);
-      ragContext = "Here is information about travel destinations that might be relevant to the query:\n\n" + 
+      ragContext = "Here is information about travel destinations that might be relevant:\n\n" + 
         relevantDocs.map(doc => `[${doc.destination_name}] ${doc.content}`).join("\n\n");
-    } else {
-      console.log("No relevant documents found to include in context");
     }
 
     // Prepare system prompt with RAG context
@@ -176,86 +137,68 @@ serve(async (req) => {
 ${ragContext}
 
 When responding to users:
-- Be concise, friendly, and helpful
+- Be concise and friendly
 - If you're recommending destinations, explain why they might be a good fit
 - If you don't know something, be honest about it
-- Focus on providing practical travel information
-- Don't make up information about destinations
-- If you reference a specific destination, mention relevant details like the best time to visit, major attractions, or visa requirements if you know them`;
+- Focus on providing practical travel information`;
 
-    console.log("Making API call to Claude");
+    // Make API call to Claude with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second timeout
     
-    // Make the API call to Claude
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01',
-        'x-api-key': anthropicApiKey,
-      },
-      body: JSON.stringify({
-        model: "claude-3-haiku-20240307",
-        system: systemPrompt,
-        messages: formattedHistory,
-        max_tokens: 1024,
-        temperature: 0.7
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error(`Claude API error (${response.status}):`, errorData);
-      throw new Error(`Anthropic API returned ${response.status}: ${errorData}`);
-    }
-
-    const data = await response.json();
-    const botResponse = data.content[0].text;
-    
-    console.log("Received response from Claude, storing in chat history");
-    
-    // Store bot response in chat history
     try {
-      await supabase.from('travel_chat_history').insert({
-        session_id: sessionId,
-        user_id: userId || null,
-        role: 'assistant',
-        content: botResponse
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01',
+          'x-api-key': anthropicApiKey,
+        },
+        body: JSON.stringify({
+          model: "claude-3-haiku-20240307",
+          system: systemPrompt,
+          messages: formattedHistory,
+          max_tokens: 1024,
+          temperature: 0.7
+        }),
+        signal: controller.signal
       });
-    } catch (error) {
-      console.error("Failed to store bot response:", error);
-      // Continue even if storing the response fails
-    }
+      
+      clearTimeout(timeoutId);
 
-    // Return the response
-    console.log("Sending successful response");
-    return new Response(JSON.stringify({ 
-      response: botResponse,
-      sessionId 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      if (!response.ok) {
+        throw new Error(`Anthropic API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      const botResponse = data.content[0].text;
+      
+      // Store bot response
+      try {
+        await supabase.from('travel_chat_history').insert({
+          session_id: sessionId,
+          user_id: userId || null,
+          role: 'assistant',
+          content: botResponse
+        });
+      } catch (error) {
+        console.error("Failed to store bot response:", error);
+      }
+
+      return new Response(JSON.stringify({ 
+        response: botResponse,
+        sessionId 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (timeoutError) {
+      console.error('Timeout calling Claude API:', timeoutError);
+      throw new Error("Request to AI service timed out. Please try again.");
+    }
   } catch (error) {
     console.error('Error in travel-chat function:', error);
     
-    // Generate a clean error message for the user
     const errorMessage = "Sorry, I'm having trouble connecting. Please try again later.";
-    
-    try {
-      // Store error message in chat history if we have session ID
-      const requestData = await req.json().catch(() => ({}));
-      const sessionId = requestData.sessionId;
-      
-      if (sessionId) {
-        await supabase.from('travel_chat_history').insert({
-          session_id: sessionId,
-          user_id: requestData.userId || null,
-          role: 'system',
-          content: errorMessage
-        }).catch(e => console.error("Failed to store error message:", e));
-      }
-    } catch (e) {
-      console.error("Error handling the error:", e);
-    }
     
     return new Response(JSON.stringify({ 
       error: error.message,
