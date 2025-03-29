@@ -21,72 +21,71 @@ const LoginPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // Redirect to /app if already logged in
+  // Handle redirect if already logged in
   useEffect(() => {
     if (user) {
       console.log("User already logged in, redirecting to /app");
-      navigate('/app');
+      window.location.href = '/app';
     }
-  }, [user, navigate]);
+  }, [user]);
 
-  // Enhanced OAuth callback handling with direct redirect
+  // Handle OAuth callback
   useEffect(() => {
-    const handleOAuthCallback = async () => {
-      // Clear any OAuth callback parameters from URL for clean UX
+    const processOAuthCallback = async () => {
+      // Check for OAuth parameters in URL
       const hasOAuthParams = location.hash.includes('access_token=') || 
                             location.search.includes('callback=auth');
       
-      if (hasOAuthParams) {
-        console.log("OAuth callback parameters detected in URL", {
-          hash: location.hash ? 'present' : 'absent',
-          search: location.search
-        });
-        
-        try {
-          // Clean the URL immediately
-          if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, document.title, '/login');
-          }
-          
-          // Check if we actually have a session
-          const { data, error } = await supabase.auth.getSession();
-          
-          if (error) {
-            throw error;
-          }
-          
-          console.log("Session check after OAuth callback:", 
-                     data.session ? "Valid session found" : "No session found");
-          
-          if (data.session) {
-            // Show success toast
-            toast({
-              title: "Login Successful!",
-              description: "Welcome to Voyagent! You've been successfully logged in.",
-            });
-            
-            // Force a hard redirect to /app to avoid any SPA routing issues
-            console.log("Redirecting to /app after successful OAuth login");
-            window.location.href = '/app';
-          }
-        } catch (error: any) {
-          console.error("Error processing OAuth callback:", error);
-          toast({
-            title: "Authentication Error",
-            description: error.message || "There was a problem with authentication",
-            variant: "destructive"
-          });
+      if (!hasOAuthParams) return;
+      
+      console.log("OAuth callback detected:", {
+        hash: !!location.hash,
+        search: location.search
+      });
+      
+      try {
+        // Clean the URL immediately for better UX
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, document.title, '/login');
         }
+        
+        // Check session
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+        
+        // If session exists, show success and redirect
+        if (data.session) {
+          console.log("Valid session found after OAuth callback");
+          
+          toast({
+            title: "Login Successful!",
+            description: "Welcome to Voyagent! You've been successfully logged in.",
+          });
+          
+          // Force redirect to /app
+          console.log("Redirecting to /app after successful OAuth login");
+          setTimeout(() => {
+            window.location.href = '/app';
+          }, 100);
+        }
+      } catch (error: any) {
+        console.error("Error processing OAuth callback:", error);
+        toast({
+          title: "Authentication Error",
+          description: error.message || "There was a problem with authentication",
+          variant: "destructive"
+        });
       }
     };
     
-    // Run the callback handler
-    handleOAuthCallback();
+    processOAuthCallback();
   }, [location, toast]);
 
-  // Regular email sign in handler
+  // Email sign in handler
   const handleEmailSignIn = async (e: FormEvent) => {
     e.preventDefault();
+    
     if (!email || !password) {
       toast({
         title: "Error",
@@ -97,6 +96,7 @@ const LoginPage = () => {
     }
     
     setIsLoading(true);
+    
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -111,7 +111,8 @@ const LoginPage = () => {
           description: "You have been logged in successfully",
         });
         
-        // Force a hard redirect to avoid any SPA routing issues
+        // Redirect to app
+        console.log("Email login successful, redirecting to /app");
         window.location.href = '/app';
       }
     } catch (error: any) {
@@ -125,9 +126,13 @@ const LoginPage = () => {
     }
   };
 
+  // OAuth sign in handler
   const handleOAuthSignIn = async (provider: 'google') => {
     setIsOAuthLoading(true);
+    
     try {
+      console.log("Initiating OAuth sign-in with", provider);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -146,24 +151,6 @@ const LoginPage = () => {
       setIsOAuthLoading(false);
     }
   };
-
-  // Check for auth callback
-  React.useEffect(() => {
-    const checkForCallback = async () => {
-      if (window.location.search.includes('callback=auth')) {
-        const { data, error } = await supabase.auth.getSession();
-        if (data.session) {
-          navigate('/');
-          toast({
-            title: "Success",
-            description: "You have been logged in successfully",
-          });
-        }
-      }
-    };
-    
-    checkForCallback();
-  }, [navigate, toast]);
 
   return (
     <motion.div 

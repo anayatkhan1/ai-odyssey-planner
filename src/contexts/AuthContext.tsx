@@ -30,16 +30,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
         
-        // Dispatch an event for debugging
-        const authEvent = new CustomEvent('supabase.auth.session', { 
-          detail: { event, session: currentSession }
-        });
-        window.dispatchEvent(authEvent);
-        
         // Log the auth state change to help with debugging
         console.log("Auth session changed:", {
           event,
-          session: currentSession ? "present" : "not present"
+          session: currentSession ? "present" : "not present",
+          pathname: window.location.pathname
         });
         
         // If we get a SIGNED_IN or INITIAL_SESSION with a user while on the login page, redirect to /app
@@ -51,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Use timeout to ensure state is updated before redirect
           setTimeout(() => {
             window.location.href = '/app';
-          }, 100);
+          }, 300);
         }
       }
     );
@@ -74,7 +69,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // If we have a session and we're on the login page, redirect to /app
         if (data.session && window.location.pathname.includes('/login')) {
           console.log("Found existing session while on login page, redirecting to /app");
-          window.location.href = '/app';
+          
+          // Use timeout to ensure state is updated before redirect
+          setTimeout(() => {
+            window.location.href = '/app';
+          }, 300);
         }
       } catch (err) {
         console.error("Error initializing auth:", err);
@@ -95,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Signing out");
       await supabase.auth.signOut();
+      window.location.href = '/';
     } catch (error) {
       console.error("Error signing out:", error);
       throw error;
