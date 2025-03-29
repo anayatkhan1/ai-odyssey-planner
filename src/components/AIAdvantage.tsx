@@ -156,17 +156,17 @@ const AIAdvantage = () => {
                 Our AI combines advanced machine learning with comprehensive travel data to understand your preferences on a deeper level. It continuously learns from your interactions to improve recommendations over time.
               </p>
               <p className="text-black font-space-grotesk relative pl-4 border-l-3 border-neo-pink">
-                While our technology is cutting-edge, we understand that human touch is important. That's why our AI is complemented by travel experts who ensure the quality of recommendations and are available to assist when needed.
+                While our technology is cutting-edge, we understand that human touch is important. That&apos;s why our AI is complemented by travel experts who ensure the quality of recommendations and are available to assist when needed.
               </p>
             </div>
             
             {/* Decorative code lines */}
             <div className="mt-6 p-4 bg-black rounded-lg overflow-hidden">
               <div className="text-neo-green font-space-mono text-xs">
-                <div className="text-neo-yellow">class TravelAI {</div>
+                <div className="text-neo-yellow">class TravelAI {'{'}</div>
                 <div className="ml-4 text-neo-green">def analyze_preferences(user_data):</div>
                 <div className="ml-8 text-neo-mint">return personalized_results</div>
-                <div className="text-neo-yellow">}</div>
+                <div className="text-neo-yellow">{'}'}</div>
               </div>
             </div>
           </div>
