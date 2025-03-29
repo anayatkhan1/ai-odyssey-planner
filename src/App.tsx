@@ -10,8 +10,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import AppDashboard from "./pages/App";
+import TravelPage from "./pages/Travel";
 
 // AnimationWrapper component
 const AnimationWrapper = () => {
@@ -22,8 +22,8 @@ const AnimationWrapper = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Index />} />
         <Route path="/app" element={<ProtectedRoute><AppDashboard /></ProtectedRoute>} />
+        <Route path="/travel" element={<ProtectedRoute><TravelPage /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
