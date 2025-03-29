@@ -1,3 +1,4 @@
+
 import React, { useState, FormEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
@@ -28,44 +29,45 @@ const LoginPage = () => {
     }
   }, [user, navigate]);
 
-  // Enhanced OAuth callback handling with more robust redirect
+  // Enhanced OAuth callback handling with direct redirect
   useEffect(() => {
     const handleOAuthCallback = async () => {
-      // Check if we're on a callback URL (after OAuth login)
-      const isCallback = location.hash.includes('access_token=') || location.search.includes('callback=auth');
+      // Clear any OAuth callback parameters from URL for clean UX
+      const hasOAuthParams = location.hash.includes('access_token=') || 
+                            location.search.includes('callback=auth');
       
-      if (isCallback) {
-        console.log("OAuth callback detected! Hash:", location.hash ? 'present' : 'absent', 
-                   "Search params:", location.search);
+      if (hasOAuthParams) {
+        console.log("OAuth callback parameters detected in URL", {
+          hash: location.hash ? 'present' : 'absent',
+          search: location.search
+        });
         
         try {
-          // Clean the URL first - before any async operations
+          // Clean the URL immediately
           if (window.history && window.history.replaceState) {
             window.history.replaceState(null, document.title, '/login');
           }
           
-          // Get the current session
+          // Check if we actually have a session
           const { data, error } = await supabase.auth.getSession();
           
           if (error) {
             throw error;
           }
           
-          console.log("Session check result:", data.session ? "Session found" : "No session");
+          console.log("Session check after OAuth callback:", 
+                     data.session ? "Valid session found" : "No session found");
           
           if (data.session) {
-            console.log("Valid session found after OAuth callback - redirecting to /app");
-            
             // Show success toast
             toast({
               title: "Login Successful!",
-              description: "Welcome back! You've been successfully logged in.",
+              description: "Welcome to Voyagent! You've been successfully logged in.",
             });
             
-            // Ensure we're no longer on the login page after auth
-            // Use a forced navigation with replace to avoid back-button issues
+            // Force a hard redirect to /app to avoid any SPA routing issues
+            console.log("Redirecting to /app after successful OAuth login");
             window.location.href = '/app';
-            return; // Stop execution after redirect
           }
         } catch (error: any) {
           console.error("Error processing OAuth callback:", error);
@@ -80,7 +82,7 @@ const LoginPage = () => {
     
     // Run the callback handler
     handleOAuthCallback();
-  }, [location, navigate, toast]);
+  }, [location, toast]);
 
   // Regular email sign in handler
   const handleEmailSignIn = async (e: FormEvent) => {
@@ -108,7 +110,9 @@ const LoginPage = () => {
           title: "Success",
           description: "You have been logged in successfully",
         });
-        navigate('/app');
+        
+        // Force a hard redirect to avoid any SPA routing issues
+        window.location.href = '/app';
       }
     } catch (error: any) {
       toast({

@@ -42,10 +42,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           session: currentSession ? "present" : "not present"
         });
         
-        // If we get a SIGNED_IN event and we're on the login page, redirect to /app
-        if (event === 'SIGNED_IN' && window.location.pathname === '/login') {
-          console.log("Auth detected SIGNED_IN event while on login page, redirecting to /app");
-          window.location.href = '/app';
+        // If we get a SIGNED_IN or INITIAL_SESSION with a user while on the login page, redirect to /app
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && 
+            currentSession && 
+            window.location.pathname.includes('/login')) {
+          console.log("Auth detected authenticated session while on login page, redirecting to /app");
+          
+          // Use timeout to ensure state is updated before redirect
+          setTimeout(() => {
+            window.location.href = '/app';
+          }, 100);
         }
       }
     );
@@ -64,6 +70,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log("Initial session check:", data.session?.user?.email || "No session");
         setSession(data.session);
         setUser(data.session?.user ?? null);
+        
+        // If we have a session and we're on the login page, redirect to /app
+        if (data.session && window.location.pathname.includes('/login')) {
+          console.log("Found existing session while on login page, redirecting to /app");
+          window.location.href = '/app';
+        }
       } catch (err) {
         console.error("Error initializing auth:", err);
       } finally {
