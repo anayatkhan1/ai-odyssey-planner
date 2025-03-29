@@ -16,6 +16,8 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Travel from "./pages/Travel";
+import Navbar from "./components/Navbar";
 
 // AnimationWrapper component
 const AnimationWrapper = () => {
@@ -26,7 +28,7 @@ const AnimationWrapper = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Index />} />
         <Route path="/app" element={<ProtectedRoute><AppDashboard /></ProtectedRoute>} />
-        <Route path="/travel" element={<ProtectedRoute><AppDashboard /></ProtectedRoute>} />
+        <Route path="/travel" element={<ProtectedRoute><Travel /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -50,6 +52,7 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
+            <Navbar />
             <Toaster />
             <Sonner />
             <AnimationWrapper />
