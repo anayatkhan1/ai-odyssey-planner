@@ -1,111 +1,44 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Eye, EyeOff, Mail, Lock, User, ArrowLeft, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { UserPlus, ArrowLeft, Check } from "lucide-react";
+import { useSignUp } from '@clerk/clerk-react';
 
 const SignupPage = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isLoaded, signUp, setActive } = useSignUp();
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate('/');
-      }
-    };
-    
-    checkSession();
-  }, [navigate]);
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neo-blue"></div>
+      </div>
+    );
+  }
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleOAuthSignUp = async (strategy: "oauth_google") => {
     setIsLoading(true);
-    
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-          },
-        }
+      await signUp.authenticateWithRedirect({
+        strategy,
+        redirectUrl: '/signup',
+        redirectUrlComplete: '/',
       });
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Account created!",
-        description: "Welcome to Voyagent, your adventure begins now.",
-      });
-      
-      navigate('/');
     } catch (error: any) {
       toast({
         title: "Signup failed",
         description: error.message || "Something went wrong. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsLoading(false);
     }
   };
-
-  const handleGoogleSignup = async () => {
-    setIsLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`
-        }
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // No need for success toast here as the page will redirect
-    } catch (error: any) {
-      toast({
-        title: "Google signup failed",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-    }
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const strengthChecker = (password: string) => {
-    if (!password) return 0;
-    if (password.length < 6) return 1;
-    if (password.length < 10) return 2;
-    return 3;
-  };
-
-  const passwordStrength = strengthChecker(password);
 
   return (
     <motion.div 
@@ -182,140 +115,12 @@ const SignupPage = () => {
               <CardDescription>Create your account in less than a minute</CardDescription>
             </CardHeader>
             
-            <CardContent>
-              <form onSubmit={handleSignup} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-base">Full Name</Label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <Input 
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="John Doe"
-                      className="pl-10 bg-white border-3 border-black font-bold"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-base">Email</Label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <Input 
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="pl-10 bg-white border-3 border-black font-bold"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-base">Password</Label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <Input 
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Create a strong password"
-                      className="pl-10 bg-white border-3 border-black font-bold"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={togglePasswordVisibility}
-                      className="absolute inset-y-0 right-3 flex items-center"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
-                  </div>
-                  
-                  {/* Password strength indicator */}
-                  {password && (
-                    <div className="mt-2">
-                      <div className="flex gap-2 mb-1">
-                        <div className={`h-2 flex-1 rounded-full ${passwordStrength >= 1 ? 'bg-red-500' : 'bg-gray-200'}`}></div>
-                        <div className={`h-2 flex-1 rounded-full ${passwordStrength >= 2 ? 'bg-yellow-500' : 'bg-gray-200'}`}></div>
-                        <div className={`h-2 flex-1 rounded-full ${passwordStrength >= 3 ? 'bg-green-500' : 'bg-gray-200'}`}></div>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        {passwordStrength === 1 && "Weak - Add more characters"}
-                        {passwordStrength === 2 && "Medium - Good length"}
-                        {passwordStrength === 3 && "Strong - Great password!"}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex items-start space-x-2">
-                  <Checkbox id="terms" className="border-2 border-black mt-1 data-[state=checked]:bg-neo-blue" required />
-                  <label
-                    htmlFor="terms"
-                    className="text-sm leading-tight"
-                  >
-                    I agree to the{" "}
-                    <Link to="/terms" className="text-neo-blue font-bold hover:underline">
-                      Terms of Service
-                    </Link>{" "}
-                    and{" "}
-                    <Link to="/privacy" className="text-neo-blue font-bold hover:underline">
-                      Privacy Policy
-                    </Link>
-                  </label>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full font-archivo font-bold bg-neo-green border-3 border-black text-black hover:bg-neo-green/90 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform h-12"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
-                      <span className="ml-2">Creating account...</span>
-                    </div>
-                  ) : (
-                    <span className="flex items-center justify-center">
-                      <UserPlus className="mr-2 h-5 w-5" /> Create Account
-                    </span>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-            
-            <CardFooter className="flex flex-col space-y-4">
-              <div className="relative w-full flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative bg-white px-4 text-sm text-gray-500">
-                  OR
-                </div>
-              </div>
-              
+            <CardContent className="space-y-6">
               <div className="w-full">
                 <Button 
                   variant="outline" 
                   className="w-full font-bold border-3 border-black bg-white hover:bg-gray-50 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform"
-                  onClick={handleGoogleSignup}
+                  onClick={() => handleOAuthSignUp("oauth_google")}
                   disabled={isLoading}
                 >
                   <svg className="mr-2 h-5 w-5" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -327,7 +132,9 @@ const SignupPage = () => {
                   Sign up with Google
                 </Button>
               </div>
-              
+            </CardContent>
+            
+            <CardFooter className="flex flex-col space-y-4">
               <p className="text-center text-sm">
                 Already have an account?{" "}
                 <Link to="/login" className="text-neo-blue font-bold hover:underline">
