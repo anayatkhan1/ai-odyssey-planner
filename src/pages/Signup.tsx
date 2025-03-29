@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, ArrowLeft, Check } from "lucide-react";
-import { useSignUp } from '@clerk/clerk-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
@@ -19,15 +19,6 @@ const SignupPage = () => {
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isLoaded, signUp, setActive } = useSignUp();
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neo-blue"></div>
-      </div>
-    );
-  }
 
   const handleEmailSignUp = async (e: FormEvent) => {
     e.preventDefault();
@@ -42,41 +33,32 @@ const SignupPage = () => {
     
     setIsLoading(true);
     try {
-      await signUp.create({
-        emailAddress: email,
+      const { data, error } = await supabase.auth.signUp({
+        email,
         password,
-        firstName,
-        lastName,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
       });
       
-      // This is only triggered if verification is disabled in Clerk Dashboard
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      if (error) throw error;
       
-      // Start the email verification process
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code: "000000", // This is a bypass code for testing, in production this would be user input
-      });
-      
-      if (completeSignUp.status === "complete") {
-        await setActive({ session: completeSignUp.createdSessionId });
-        navigate('/');
+      if (data.user) {
         toast({
           title: "Account created",
-          description: "Your account has been created successfully!",
+          description: "Please check your email to verify your account.",
         });
-      } else {
-        // Email verification flow
-        toast({
-          title: "Verification needed",
-          description: "Please check your email for a verification code.",
-        });
-        // In a real implementation, you would collect the code from the user here
+        navigate('/login');
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
       toast({
         title: "Signup failed",
-        description: error.errors?.[0]?.message || "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -84,14 +66,18 @@ const SignupPage = () => {
     }
   };
 
-  const handleOAuthSignUp = async (strategy: "oauth_google") => {
+  const handleOAuthSignUp = async (provider: 'google') => {
     setIsOAuthLoading(true);
     try {
-      await signUp.authenticateWithRedirect({
-        strategy,
-        redirectUrl: '/signup',
-        redirectUrlComplete: '/',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/login?callback=auth`,
+        },
       });
+      
+      if (error) throw error;
+      
     } catch (error: any) {
       toast({
         title: "Signup failed",
@@ -230,7 +216,7 @@ const SignupPage = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
-                  <p className="text-xs text-gray-500">Password must be at least 8 characters long</p>
+                  <p className="text-xs text-gray-500">Password must be at least 6 characters long</p>
                 </div>
                 
                 <Button 
@@ -258,7 +244,7 @@ const SignupPage = () => {
                 <Button 
                   variant="outline" 
                   className="w-full font-bold border-3 border-black bg-white hover:bg-gray-50 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform"
-                  onClick={() => handleOAuthSignUp("oauth_google")}
+                  onClick={() => handleOAuthSignUp('google')}
                   disabled={isOAuthLoading}
                 >
                   {isOAuthLoading ? (

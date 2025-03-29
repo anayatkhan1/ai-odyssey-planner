@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { LogIn, ArrowLeft } from "lucide-react";
-import { useSignIn } from '@clerk/clerk-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -17,15 +17,6 @@ const LoginPage = () => {
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isLoaded, signIn, setActive } = useSignIn();
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neo-blue"></div>
-      </div>
-    );
-  }
 
   const handleEmailSignIn = async (e: FormEvent) => {
     e.preventDefault();
@@ -40,25 +31,24 @@ const LoginPage = () => {
     
     setIsLoading(true);
     try {
-      const result = await signIn.create({
-        identifier: email,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
         password,
       });
       
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
+      if (error) throw error;
+      
+      if (data.session) {
         navigate('/');
-      } else {
         toast({
-          title: "Login failed",
-          description: "There was an error with your login. Please try again.",
-          variant: "destructive"
+          title: "Success",
+          description: "You have been logged in successfully",
         });
       }
     } catch (error: any) {
       toast({
         title: "Login failed",
-        description: error.errors?.[0]?.message || "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -66,14 +56,18 @@ const LoginPage = () => {
     }
   };
 
-  const handleOAuthSignIn = async (strategy: "oauth_google") => {
+  const handleOAuthSignIn = async (provider: 'google') => {
     setIsOAuthLoading(true);
     try {
-      await signIn.authenticateWithRedirect({
-        strategy,
-        redirectUrl: '/login',
-        redirectUrlComplete: '/',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/login?callback=auth`,
+        },
       });
+      
+      if (error) throw error;
+      
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -83,6 +77,24 @@ const LoginPage = () => {
       setIsOAuthLoading(false);
     }
   };
+
+  // Check for auth callback
+  React.useEffect(() => {
+    const checkForCallback = async () => {
+      if (window.location.search.includes('callback=auth')) {
+        const { data, error } = await supabase.auth.getSession();
+        if (data.session) {
+          navigate('/');
+          toast({
+            title: "Success",
+            description: "You have been logged in successfully",
+          });
+        }
+      }
+    };
+    
+    checkForCallback();
+  }, [navigate, toast]);
 
   return (
     <motion.div 
@@ -206,7 +218,7 @@ const LoginPage = () => {
                 <Button 
                   variant="outline" 
                   className="w-full font-bold border-3 border-black bg-white hover:bg-gray-50 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform"
-                  onClick={() => handleOAuthSignIn("oauth_google")}
+                  onClick={() => handleOAuthSignIn('google')}
                   disabled={isOAuthLoading}
                 >
                   {isOAuthLoading ? (
