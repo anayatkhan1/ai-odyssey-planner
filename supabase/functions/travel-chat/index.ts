@@ -14,10 +14,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Get embeddings using Anthropic's API - simplified for reliability
+// Get embeddings using Anthropic's API - improved for better error handling
 async function getEmbeddings(text: string) {
   try {
     console.log("Getting embeddings for text:", text.slice(0, 30) + "...");
+    
+    if (!anthropicApiKey) {
+      console.error("Anthropic API key is not configured");
+      throw new Error("Anthropic API key is not configured");
+    }
     
     const response = await fetch('https://api.anthropic.com/v1/embeddings', {
       method: 'POST',
@@ -34,7 +39,9 @@ async function getEmbeddings(text: string) {
     });
 
     if (!response.ok) {
-      throw new Error(`Anthropic Embeddings API returned ${response.status}`);
+      const errorData = await response.text();
+      console.error(`Anthropic Embeddings API error (${response.status}):`, errorData);
+      throw new Error(`Anthropic Embeddings API returned ${response.status}: ${errorData}`);
     }
 
     const data = await response.json();
@@ -45,11 +52,45 @@ async function getEmbeddings(text: string) {
   }
 }
 
-// Simplified document retrieval
+// Function to generate and store embeddings for a document
+async function generateEmbeddingForDocument(documentId: string, content: string) {
+  try {
+    console.log(`Generating embedding for document ID: ${documentId}`);
+    
+    // Get embedding from Anthropic
+    const embedding = await getEmbeddings(content);
+    
+    if (!embedding) {
+      throw new Error("Failed to generate embedding");
+    }
+    
+    // Update the document with the embedding
+    const { error } = await supabase
+      .from('travel_documents')
+      .update({ embedding })
+      .eq('id', documentId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error generating embedding for document:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Simplified document retrieval with better error handling
 async function getRelevantDocuments(query: string, limit = 3) {
   try {
+    console.log(`Finding relevant documents for query: ${query.slice(0, 30)}...`);
     const embedding = await getEmbeddings(query);
-    if (!embedding) return [];
+    
+    if (!embedding) {
+      console.error("Failed to generate embedding for query");
+      return [];
+    }
 
     const { data: documents, error } = await supabase
       .rpc('match_travel_documents', {
@@ -58,7 +99,12 @@ async function getRelevantDocuments(query: string, limit = 3) {
         match_count: limit
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error in match_travel_documents RPC:", error);
+      throw error;
+    }
+    
+    console.log(`Found ${documents?.length || 0} relevant documents`);
     return documents || [];
   } catch (error) {
     console.error('Error retrieving documents:', error);
@@ -91,16 +137,36 @@ serve(async (req) => {
   }
 
   try {
-    const { message, sessionId, userId } = await req.json();
+    const reqData = await req.json();
+    
+    // Handle embedding generation
+    if (reqData.action === 'generate_embedding') {
+      const { document_id, content } = reqData;
+      
+      if (!document_id || !content) {
+        throw new Error("Missing required parameters for embedding generation");
+      }
+      
+      const result = await generateEmbeddingForDocument(document_id, content);
+      
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Handle chat message
+    const { message, sessionId, userId } = reqData;
     
     if (!message || !sessionId) {
-      throw new Error("Missing required parameters");
+      throw new Error("Missing required parameters for chat");
     }
     
     // Basic validation of API key
     if (!anthropicApiKey) {
       throw new Error("Anthropic API key is not configured");
     }
+    
+    console.log(`Processing message for session ${sessionId}`);
     
     // Store user message
     try {
@@ -129,6 +195,9 @@ serve(async (req) => {
     if (relevantDocs.length > 0) {
       ragContext = "Here is information about travel destinations that might be relevant:\n\n" + 
         relevantDocs.map(doc => `[${doc.destination_name}] ${doc.content}`).join("\n\n");
+      console.log("RAG context provided with", relevantDocs.length, "documents");
+    } else {
+      console.log("No relevant documents found for RAG context");
     }
 
     // Prepare system prompt with RAG context
@@ -167,7 +236,9 @@ When responding to users:
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`Anthropic API returned ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Anthropic API error (${response.status}):`, errorText);
+        throw new Error(`Anthropic API returned ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
@@ -192,8 +263,8 @@ When responding to users:
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (timeoutError) {
-      console.error('Timeout calling Claude API:', timeoutError);
-      throw new Error("Request to AI service timed out. Please try again.");
+      console.error('Timeout or error calling Claude API:', timeoutError);
+      throw new Error("Request to AI service timed out or failed. Please try again.");
     }
   } catch (error) {
     console.error('Error in travel-chat function:', error);

@@ -1,17 +1,66 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { DestinationType } from '@/pages/Travel';
-import { Sparkles, Database, Trash, RefreshCw } from 'lucide-react';
+import { Sparkles, Database, Trash, RefreshCw, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const TravelDataGenerator = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isGeneratingEmbeddings, setIsGeneratingEmbeddings] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'checking' | 'error' | 'ready'>('checking');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [docsCount, setDocsCount] = useState(0);
+  const [embedsCount, setEmbedsCount] = useState(0);
+
+  // Check database status when component mounts
+  useEffect(() => {
+    checkDatabaseStatus();
+  }, []);
+
+  const checkDatabaseStatus = async () => {
+    setStatus('checking');
+    setStatusMessage('Checking database status...');
+    
+    try {
+      // Check if we have documents and how many have embeddings
+      const { count: totalDocs, error: countError } = await supabase
+        .from('travel_documents')
+        .select('*', { count: 'exact', head: true });
+      
+      if (countError) throw countError;
+      
+      const { count: embedsCount, error: embedsError } = await supabase
+        .from('travel_documents')
+        .select('*', { count: 'exact', head: true })
+        .not('embedding', 'is', null);
+      
+      if (embedsError) throw embedsError;
+      
+      setDocsCount(totalDocs || 0);
+      setEmbedsCount(embedsCount || 0);
+      
+      if (totalDocs === 0) {
+        setStatus('idle');
+        setStatusMessage('No documents found. Generate test data to continue.');
+      } else if (embedsCount < totalDocs) {
+        setStatus('error');
+        setStatusMessage(`Found ${totalDocs} documents but only ${embedsCount} have embeddings. Generate embeddings to complete setup.`);
+      } else {
+        setStatus('ready');
+        setStatusMessage(`RAG system ready with ${totalDocs} documents and ${embedsCount} embeddings.`);
+      }
+    } catch (error) {
+      console.error('Error checking database status:', error);
+      setStatus('error');
+      setStatusMessage('Failed to check database status. See console for details.');
+    }
+  };
 
   const generateDestinationDocument = (destination: DestinationType): string => {
     return `
@@ -56,13 +105,12 @@ The visa requirement is: ${destination.visaRequirement}.
       // Get all destinations for seeding
       const mockedDestinations: DestinationType[] = [];
       
-      // This is a placeholder - in reality, we'd get destinations from your Travel page
-      // For testing, we'll simulate by creating random destinations
+      // Create random destinations
       for (let i = 1; i <= 50; i++) {
         mockedDestinations.push({
           id: i.toString(),
           name: `Destination ${i}`,
-          description: `Description for destination ${i}`,
+          description: `${['Beautiful', 'Amazing', 'Scenic', 'Historic', 'Cultural'][Math.floor(Math.random() * 5)]} destination with ${['beaches', 'mountains', 'forests', 'museums', 'nightlife'][Math.floor(Math.random() * 5)]} and ${['great food', 'friendly locals', 'affordable accommodations', 'luxury resorts', 'outdoor adventures'][Math.floor(Math.random() * 5)]}.`,
           image: `https://example.com/image${i}.jpg`,
           budget: ['Low', 'Medium', 'High', 'Luxury'][Math.floor(Math.random() * 4)] as any,
           duration: ['Weekend', '3-5 Days', '1 Week+'][Math.floor(Math.random() * 3)] as any,
@@ -101,6 +149,9 @@ The visa requirement is: ${destination.visaRequirement}.
         title: "Success!",
         description: `Created ${mockedDestinations.length} travel documents in the database.`,
       });
+
+      // Update status
+      await checkDatabaseStatus();
     } catch (error) {
       console.error('Error populating database:', error);
       toast({
@@ -140,37 +191,64 @@ The visa requirement is: ${destination.visaRequirement}.
         description: `Found ${data.length} documents that need embeddings. This might take a while...`,
       });
       
+      let successCount = 0;
+      let failCount = 0;
+      
       // For each document, call the edge function to generate embeddings
       for (let i = 0; i < data.length; i++) {
         const document = data[i];
         
-        // Call edge function to generate embeddings
-        const { error: fnError } = await supabase.functions.invoke('travel-chat', {
-          body: {
-            action: 'generate_embedding',
-            document_id: document.id,
-            content: document.content
-          },
-        });
-        
-        if (fnError) {
-          console.error('Error generating embedding:', fnError);
-          continue; // Continue with other documents even if one fails
+        try {
+          // Call edge function to generate embeddings
+          const { error: fnError, data: fnData } = await supabase.functions.invoke('travel-chat', {
+            body: {
+              action: 'generate_embedding',
+              document_id: document.id,
+              content: document.content
+            },
+          });
+          
+          if (fnError) {
+            console.error('Error generating embedding:', fnError);
+            failCount++;
+            continue; // Continue with other documents even if one fails
+          }
+          
+          if (fnData && fnData.success) {
+            successCount++;
+          } else {
+            console.error('Failed to generate embedding:', fnData?.error || 'Unknown error');
+            failCount++;
+          }
+        } catch (e) {
+          console.error('Exception generating embedding:', e);
+          failCount++;
         }
         
         // Update progress
         setProgress(Math.floor(((i + 1) / data.length) * 100));
       }
       
-      toast({
-        title: "Success!",
-        description: `Generated embeddings for ${data.length} documents.`,
-      });
+      if (successCount > 0) {
+        toast({
+          title: "Success!",
+          description: `Generated embeddings for ${successCount} documents.${failCount > 0 ? ` Failed: ${failCount}` : ''}`,
+        });
+      } else {
+        toast({
+          title: "Failed",
+          description: "Could not generate any embeddings. Check that your Anthropic API key is configured.",
+          variant: "destructive",
+        });
+      }
+      
+      // Update status
+      await checkDatabaseStatus();
     } catch (error) {
       console.error('Error generating embeddings:', error);
       toast({
         title: "Error",
-        description: "Failed to generate embeddings. See console for details.",
+        description: "Failed to generate embeddings. Check that your Anthropic API key is configured correctly.",
         variant: "destructive",
       });
     } finally {
@@ -189,6 +267,9 @@ The visa requirement is: ${destination.visaRequirement}.
         title: "Success!",
         description: "All travel documents have been removed from the database.",
       });
+      
+      // Update status
+      await checkDatabaseStatus();
     } catch (error) {
       console.error('Error clearing database:', error);
       toast({
@@ -210,6 +291,20 @@ The visa requirement is: ${destination.visaRequirement}.
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {status !== 'idle' && (
+          <Alert variant={status === 'ready' ? 'default' : status === 'error' ? 'destructive' : 'default'}>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>
+              {status === 'ready' ? 'System Ready' : 
+               status === 'error' ? 'Action Required' : 
+               'Checking Status'}
+            </AlertTitle>
+            <AlertDescription>
+              {statusMessage}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <p className="text-sm text-gray-600">
           Use these tools to populate the travel documents database for RAG system testing.
         </p>
@@ -226,7 +321,7 @@ The visa requirement is: ${destination.visaRequirement}.
           
           <Button
             onClick={generateEmbeddings}
-            disabled={isLoading || isGeneratingEmbeddings}
+            disabled={isLoading || isGeneratingEmbeddings || docsCount === 0}
             variant="outline"
             className="flex items-center gap-2"
           >
@@ -237,7 +332,7 @@ The visa requirement is: ${destination.visaRequirement}.
           <Button
             onClick={clearDatabase}
             variant="outline"
-            disabled={isLoading || isGeneratingEmbeddings}
+            disabled={isLoading || isGeneratingEmbeddings || docsCount === 0}
             className="flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50"
           >
             <Trash className="h-4 w-4" />
