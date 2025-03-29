@@ -117,20 +117,6 @@ const Pricing = () => {
             />
           ))}
         </div>
-
-        <div className="mt-12 bg-white p-6 rounded-xl max-w-3xl mx-auto border-5 border-black shadow-neo">
-          <h3 className="text-xl font-archivo font-black mb-4 text-center">Frequently Asked Questions</h3>
-          <div className="space-y-4">
-            <div className="p-4 border-3 border-black rounded-lg">
-              <h4 className="font-archivo font-black mb-1">Can I cancel my subscription anytime?</h4>
-              <p className="text-black font-space-grotesk">Yes, you can cancel your subscription at any time with no questions asked. You'll continue to have access until the end of your billing period.</p>
-            </div>
-            <div className="p-4 border-3 border-black rounded-lg">
-              <h4 className="font-archivo font-black mb-1">Is my data secure?</h4>
-              <p className="text-black font-space-grotesk">Your privacy is our priority. We use industry-standard encryption to protect your data and never share your personal information with third parties.</p>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
