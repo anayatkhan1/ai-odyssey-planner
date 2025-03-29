@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Globe, Menu, X, ChevronRight } from "lucide-react";
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,6 +32,11 @@ const Navbar = () => {
   }, []);
 
   const navItems = ["Features", "How It Works", "Pricing", "Testimonials", "FAQ"];
+
+  // Don't show navbar on login and signup pages
+  if (location.pathname === '/login' || location.pathname === '/signup') {
+    return null;
+  }
 
   return (
     <nav 
@@ -66,13 +73,17 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center space-x-4">
-          <Button className="font-archivo font-bold bg-white border-3 border-black text-black hover:bg-gray-100 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform group">
-            Log in
-          </Button>
-          <Button className="font-archivo font-bold bg-neo-blue border-3 border-black text-white hover:bg-neo-blue/90 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform group">
-            Sign up free
-            <ChevronRight className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-          </Button>
+          <Link to="/login">
+            <Button className="font-archivo font-bold bg-white border-3 border-black text-black hover:bg-gray-100 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform group">
+              Log in
+            </Button>
+          </Link>
+          <Link to="/signup">
+            <Button className="font-archivo font-bold bg-neo-blue border-3 border-black text-white hover:bg-neo-blue/90 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform group">
+              Sign up free
+              <ChevronRight className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+            </Button>
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -107,13 +118,23 @@ const Navbar = () => {
               </a>
             ))}
             <div className="pt-6 flex flex-col space-y-4 border-t-3 border-black animate-fade-in" style={{ animationDelay: '0.5s' }}>
-              <Button className="font-archivo font-bold bg-white border-3 border-black text-black hover:bg-gray-100 shadow-neo hover:translate-y-2 hover:translate-x-2 hover:shadow-none transition-transform h-14">
-                Log in
-              </Button>
-              <Button className="font-archivo font-bold bg-neo-blue border-3 border-black text-white hover:bg-neo-blue/90 shadow-neo hover:translate-y-2 hover:translate-x-2 hover:shadow-none transition-transform h-14 group">
-                Sign up free
-                <ChevronRight className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-              </Button>
+              <Link to="/login" onClick={() => {
+                setMobileMenuOpen(false);
+                document.body.style.overflow = 'auto';
+              }}>
+                <Button className="w-full font-archivo font-bold bg-white border-3 border-black text-black hover:bg-gray-100 shadow-neo hover:translate-y-2 hover:translate-x-2 hover:shadow-none transition-transform h-14">
+                  Log in
+                </Button>
+              </Link>
+              <Link to="/signup" onClick={() => {
+                setMobileMenuOpen(false);
+                document.body.style.overflow = 'auto';
+              }}>
+                <Button className="w-full font-archivo font-bold bg-neo-blue border-3 border-black text-white hover:bg-neo-blue/90 shadow-neo hover:translate-y-2 hover:translate-x-2 hover:shadow-none transition-transform h-14 group">
+                  Sign up free
+                  <ChevronRight className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

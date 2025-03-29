@@ -139,6 +139,7 @@ export default {
 			boxShadow: {
 				'neo': '4px 4px 0 0 #000000',
 				'neo-lg': '8px 8px 0 0 #000000',
+				'neo-sm': '2px 2px 0 0 #000000',
 			}
 		}
 	},
