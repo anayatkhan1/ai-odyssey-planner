@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, X, Loader2, Plus, Sparkles, Plane, User, Bot, MapPin, Globe, Compass, ChevronRight } from 'lucide-react';
+import { MessageCircle, Send, X, Loader2, Plane, User, Bot, MapPin, Globe, Compass, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -55,7 +56,7 @@ const ChatMessage = ({ message }: { message: Message }) => {
       </div>
       
       {isUser && (
-        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-travel-blue mr-2 flex-shrink-0">
+        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-travel-blue ml-2 flex-shrink-0">
           <User className="h-5 w-5 text-white" />
         </div>
       )}
@@ -132,9 +133,11 @@ const TravelChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   useEffect(() => {
     const storedSessionId = localStorage.getItem('travelChatSessionId');
@@ -166,6 +169,7 @@ const TravelChat = () => {
 
   const loadChatHistory = async (sessionId: string) => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('travel_chat_history')
         .select('*')
@@ -189,11 +193,13 @@ const TravelChat = () => {
         description: "Could not load your previous messages",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
     
     const userMessage = {
       role: 'user' as const,
@@ -203,8 +209,11 @@ const TravelChat = () => {
     setMessages([...messages, userMessage]);
     setInput('');
     setIsLoading(true);
+    setErrorMessage(null);
     
     try {
+      console.log("Sending message to travel-chat function:", userMessage.content);
+      
       const response = await supabase.functions.invoke('travel-chat', {
         body: {
           message: userMessage.content,
@@ -213,7 +222,19 @@ const TravelChat = () => {
         },
       });
       
-      if (response.error) throw new Error(response.error.message);
+      console.log("Response from travel-chat function:", response);
+      
+      if (response.error) {
+        throw new Error(response.error.message || 'Error processing message');
+      }
+      
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+      
+      if (!response.data.response) {
+        throw new Error('No response received from assistant');
+      }
       
       const botMessage = {
         role: 'assistant' as const,
@@ -221,21 +242,38 @@ const TravelChat = () => {
       };
       
       setMessages((msgs) => [...msgs, botMessage]);
+      
+      // Reset retry count on success
+      setRetryCount(0);
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: "Error sending message",
-        description: "Could not process your message. Please try again later.",
-        variant: "destructive",
-      });
       
+      // Show error toast only on first attempt
+      if (retryCount === 0) {
+        toast({
+          title: "Error sending message",
+          description: "Could not process your message. Retrying...",
+          variant: "destructive",
+        });
+      }
+      
+      // Track retry attempts
+      setRetryCount(prev => prev + 1);
+      
+      // If error persists after multiple retries, show a helpful error message
+      const errorMsg = retryCount >= 2 
+        ? "Sorry, I'm having trouble connecting. Please try again later."
+        : "Retry attempt failed. Please wait a moment and try again.";
+        
       setMessages((msgs) => [
         ...msgs,
         {
           role: 'system',
-          content: "Sorry, I'm having trouble connecting. Please try again later.",
+          content: errorMsg,
         },
       ]);
+      
+      setErrorMessage(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -253,6 +291,8 @@ const TravelChat = () => {
     setSessionId(newSessionId);
     localStorage.setItem('travelChatSessionId', newSessionId);
     setMessages([]);
+    setRetryCount(0);
+    setErrorMessage(null);
     toast({
       title: "New chat started",
       description: "Your previous chat history is still saved",
@@ -273,12 +313,16 @@ const TravelChat = () => {
     }
   };
 
+  const dismissError = () => {
+    setErrorMessage(null);
+  };
+
   const renderChatContent = () => (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="flex items-center justify-between p-3 bg-travel-blue text-white border-b border-travel-blue/20">
         <div className="flex items-center gap-2">
           <div className="bg-white rounded-full p-1.5 flex-shrink-0">
-            <Sparkles className="h-4 w-4 text-travel-blue" />
+            <Plane className="h-4 w-4 text-travel-blue" />
           </div>
           <h3 className="font-archivo text-lg font-bold">Travel Assistant</h3>
         </div>
@@ -289,7 +333,6 @@ const TravelChat = () => {
             onClick={startNewChat}
             className="text-xs hover:bg-travel-blue/20 text-white"
           >
-            <Plus className="h-3 w-3 mr-1" />
             New Chat
           </Button>
           {isFullscreen && (
@@ -345,6 +388,33 @@ const TravelChat = () => {
           </Button>
         </div>
       </div>
+      
+      {/* Error message toast */}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="absolute bottom-20 left-0 right-0 mx-auto w-11/12 max-w-sm bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg"
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-medium">Error sending message</p>
+                <p className="text-sm opacity-90">Could not process your message. Please try again later.</p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={dismissError}
+                className="text-white hover:bg-red-600"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 
