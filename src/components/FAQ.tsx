@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Accordion,
   AccordionContent,
@@ -8,6 +8,15 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { MessageCircleQuestion, ChevronRight, Sparkles } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import ContactForm from './ContactForm';
 
 const faqData = [
   {
@@ -33,6 +42,8 @@ const faqData = [
 ];
 
 const FAQ = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
     <section id="faq" className="relative bg-neo-background py-20">
       {/* Decorative elements */}
@@ -90,10 +101,34 @@ const FAQ = () => {
         <div className="text-center">
           <div className="inline-block bg-neo-pink border-3 border-black px-8 py-6 rounded-lg shadow-neo transform -rotate-1 relative z-10">
             <p className="text-xl font-bold mb-4 text-white font-archivo">Still have questions?</p>
-            <Button className="bg-white border-3 border-black text-neo-blue font-bold px-6 py-5 rounded-lg shadow-neo-sm hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all font-space-grotesk group">
-              Contact Support
-              <ChevronRight className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-            </Button>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-white border-3 border-black text-neo-blue font-bold px-6 py-5 rounded-lg shadow-neo-sm hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all font-space-grotesk group">
+                  Contact Support
+                  <ChevronRight className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px] border-4 border-black p-0 overflow-hidden">
+                <div className="bg-gradient-to-r from-neo-pink to-neo-blue p-1">
+                  <div className="bg-white p-6">
+                    <DialogHeader className="mb-6">
+                      <div className="flex items-center justify-center mb-2">
+                        <div className="bg-neo-yellow border-3 border-black rounded-full p-2 shadow-neo-sm">
+                          <MessageCircleQuestion className="h-6 w-6" />
+                        </div>
+                      </div>
+                      <DialogTitle className="text-2xl font-archivo font-black text-center">Get in Touch</DialogTitle>
+                      <DialogDescription className="text-center font-space-grotesk">
+                        Have a question? Our support team is here to help you!
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <ContactForm onSuccess={() => setIsDialogOpen(false)} />
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>

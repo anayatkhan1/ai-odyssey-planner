@@ -2,8 +2,30 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, MapPin, Sparkles, Globe, Star } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 const Hero = () => {
+  const { toast } = useToast();
+
+  const handleStartPlanning = () => {
+    // In a real app, this would navigate to a sign-up or planning page
+    toast({
+      title: "Let's start planning!",
+      description: "Creating your personalized travel experience...",
+      duration: 3000,
+    });
+    
+    // Simulate redirection with scroll to features
+    setTimeout(() => {
+      document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+    }, 1000);
+  };
+
+  const handleHowItWorks = () => {
+    // Scroll to the How It Works section
+    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <section className="relative overflow-hidden bg-neo-background pt-32 pb-20 md:pt-36 md:pb-28">
       {/* Grid background */}
@@ -64,7 +86,10 @@ const Hero = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 pt-6">
-              <Button className="btn-primary text-lg group overflow-hidden relative h-14">
+              <Button 
+                className="btn-primary text-lg group overflow-hidden relative h-14"
+                onClick={handleStartPlanning}
+              >
                 <span className="flex items-center">
                   Start Planning For Free
                   <span className="ml-2 opacity-100 group-hover:translate-x-1 transition-all duration-300">
@@ -72,7 +97,11 @@ const Hero = () => {
                   </span>
                 </span>
               </Button>
-              <Button variant="outline" className="text-lg border-3 border-black bg-neo-yellow text-black hover:bg-neo-yellow/90 shadow-neo transition-transform hover:translate-y-1 hover:translate-x-1 hover:shadow-none h-14 group">
+              <Button 
+                variant="outline" 
+                className="text-lg border-3 border-black bg-neo-yellow text-black hover:bg-neo-yellow/90 shadow-neo transition-transform hover:translate-y-1 hover:translate-x-1 hover:shadow-none h-14 group"
+                onClick={handleHowItWorks}
+              >
                 <span className="flex items-center">
                   How It Works
                   <span className="ml-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">
