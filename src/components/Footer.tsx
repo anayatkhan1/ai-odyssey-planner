@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Globe, Instagram, Twitter, Facebook, Linkedin, Mail, MapPin, Phone, ArrowUpRight } from "lucide-react";
+import { Globe, Instagram, Twitter, Facebook, Linkedin, Mail, MapPin, Phone, ArrowUpRight, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from 'framer-motion';
 
@@ -209,12 +210,16 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="absolute right-6 bottom-20">
+        <div className="absolute right-10 bottom-24">
           <motion.button 
             onClick={scrollToTop}
-            className="bg-neo-yellow text-black border-3 border-black rounded-lg p-2 shadow-neo-sm hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all block"
+            className="group relative bg-gradient-to-r from-neo-yellow to-neo-orange text-black border-3 border-black rounded-full p-3 shadow-neo-sm hover:shadow-none transition-all duration-300 overflow-hidden"
             aria-label="Scroll to top"
-            whileHover={{ scale: 1.1 }}
+            whileHover={{ 
+              scale: 1.05,
+              rotate: [0, 5, -5, 0],
+              transition: { duration: 0.5 }
+            }}
             whileTap={{ scale: 0.95 }}
             initial={{ y: 0 }}
             animate={{ 
@@ -226,9 +231,24 @@ const Footer = () => {
               }
             }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-            </svg>
+            {/* Glow effect */}
+            <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-30 rounded-full blur-md transition-opacity duration-300"></span>
+            
+            {/* Icon */}
+            <ChevronUp 
+              className="h-6 w-6 relative z-10 group-hover:scale-110 transition-transform duration-300" 
+              strokeWidth={3}
+            />
+            
+            {/* Circle reveal animation on hover */}
+            <motion.span 
+              className="absolute bottom-0 left-0 right-0 h-0 bg-white/20 z-0"
+              initial={{ height: 0 }}
+              whileHover={{ 
+                height: '100%',
+                transition: { duration: 0.3 }
+              }}
+            />
           </motion.button>
         </div>
       </div>
