@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Lightbulb, Calendar, Users, Sparkles, Compass, ArrowUpRight } from "lucide-react";
+import { ArrowRight, Lightbulb, Calendar, Users, Sparkles, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const HowItWorks = () => {
@@ -46,7 +46,7 @@ const HowItWorks = () => {
       
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-16">
-          <div className="inline-block bg-white px-8 py-6 rounded-xl border-5 border-black shadow-neo-lg mb-6 transform -rotate-1 relative">
+          <div className="inline-block bg-white px-8 py-6 rounded-xl border-5 border-black shadow-neo-lg mb-6 relative">
             <Sparkles className="absolute -top-6 -right-6 h-10 w-10 text-white bg-neo-pink p-2 rounded-full border-3 border-black" />
             <h2 className="font-archivo text-3xl md:text-4xl font-black text-black m-0">
               <span className="text-neo-blue">How It </span>

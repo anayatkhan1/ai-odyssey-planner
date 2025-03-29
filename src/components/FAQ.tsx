@@ -53,7 +53,7 @@ const FAQ = () => {
       
       <div className="max-w-5xl mx-auto px-6 relative">
         <div className="text-center mb-12 animate-fade-in">
-          <div className="inline-block bg-neo-yellow border-3 border-black px-4 py-1 text-lg font-bold rounded-lg -rotate-2 mb-4 shadow-neo-sm">
+          <div className="inline-block bg-neo-yellow border-3 border-black px-4 py-1 text-lg font-bold rounded-lg mb-4 shadow-neo-sm">
             <span className="font-bold font-archivo flex items-center">
               <MessageCircleQuestion size={18} className="mr-2" />
               Common Questions
@@ -72,8 +72,8 @@ const FAQ = () => {
           </p>
         </div>
 
-        {/* FAQ accordion with enhanced styling */}
-        <div className="bg-white border-5 border-black rounded-xl shadow-neo p-6 md:p-8 transform rotate-1 mb-16 relative z-10">
+        {/* FAQ accordion with enhanced styling - removed rotation */}
+        <div className="bg-white border-5 border-black rounded-xl shadow-neo p-6 md:p-8 mb-16 relative z-10">
           <Accordion type="single" collapsible className="space-y-6">
             {faqData.map((faq, index) => (
               <AccordionItem 
@@ -97,9 +97,9 @@ const FAQ = () => {
           </Accordion>
         </div>
 
-        {/* "Still have questions" card with enhanced styling */}
+        {/* "Still have questions" card - removed rotation */}
         <div className="text-center">
-          <div className="inline-block bg-neo-pink border-3 border-black px-8 py-6 rounded-lg shadow-neo transform -rotate-1 relative z-10">
+          <div className="inline-block bg-neo-pink border-3 border-black px-8 py-6 rounded-lg shadow-neo relative z-10">
             <p className="text-xl font-bold mb-4 text-white font-archivo">Still have questions?</p>
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
