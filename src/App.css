@@ -34,3 +34,80 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Travel specific styles */
+.travel-card {
+  transition: all 0.3s ease;
+  border: 3px solid transparent;
+}
+
+.travel-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  border-color: #079992;
+}
+
+.travel-gradient {
+  background: linear-gradient(135deg, #0A3D62 0%, #079992 100%);
+}
+
+.travel-map-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.travel-filter-button {
+  transition: all 0.2s ease;
+}
+
+.travel-filter-button:hover {
+  transform: scale(1.05);
+}
+
+.travel-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.travel-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Animations */
+@keyframes travel-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.travel-animate-fade-in {
+  animation: travel-fade-in 0.5s ease-out forwards;
+}
+
+/* Pulse animation for interactive elements */
+@keyframes travel-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(7, 153, 146, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(7, 153, 146, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(7, 153, 146, 0);
+  }
+}
+
+.travel-pulse {
+  animation: travel-pulse 2s infinite;
+}
