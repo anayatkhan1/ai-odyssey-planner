@@ -1,10 +1,26 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Globe, Instagram, Twitter, Facebook, Linkedin, Mail, MapPin, Phone, ArrowUpRight, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Footer = () => {
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      // Calculate when we've scrolled past 60% of the page height
+      const scrollThreshold = document.documentElement.scrollHeight * 0.6;
+      setShowScrollButton(window.scrollY > scrollThreshold);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    // Initial check
+    handleScroll();
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -210,47 +226,52 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="absolute right-10 bottom-24">
-          <motion.button 
-            onClick={scrollToTop}
-            className="group relative bg-gradient-to-r from-neo-yellow to-neo-orange text-black border-3 border-black rounded-full p-3 shadow-neo-sm hover:shadow-none transition-all duration-300 overflow-hidden"
-            aria-label="Scroll to top"
-            whileHover={{ 
-              scale: 1.05,
-              rotate: [0, 5, -5, 0],
-              transition: { duration: 0.5 }
-            }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ y: 0 }}
-            animate={{ 
-              y: [0, -5, 0],
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                repeatType: "reverse"
-              }
-            }}
-          >
-            {/* Glow effect */}
-            <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-30 rounded-full blur-md transition-opacity duration-300"></span>
-            
-            {/* Icon */}
-            <ChevronUp 
-              className="h-6 w-6 relative z-10 group-hover:scale-110 transition-transform duration-300" 
-              strokeWidth={3}
-            />
-            
-            {/* Circle reveal animation on hover */}
-            <motion.span 
-              className="absolute bottom-0 left-0 right-0 h-0 bg-white/20 z-0"
-              initial={{ height: 0 }}
-              whileHover={{ 
-                height: '100%',
-                transition: { duration: 0.3 }
-              }}
-            />
-          </motion.button>
-        </div>
+        {/* Scroll to top button */}
+        <AnimatePresence>
+          {showScrollButton && (
+            <motion.div 
+              className="fixed right-10 bottom-32 z-50"
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.button 
+                onClick={scrollToTop}
+                className="group relative bg-gradient-to-r from-neo-yellow to-neo-orange text-black border-3 border-black rounded-full p-3 shadow-neo-sm hover:shadow-none transition-all duration-300 overflow-hidden"
+                aria-label="Scroll to top"
+                whileHover={{ 
+                  scale: 1.1,
+                  rotate: [0, 5, -5, 0],
+                  transition: { duration: 0.5 }
+                }}
+                whileTap={{ 
+                  scale: 0.9,
+                  transition: { type: "spring", stiffness: 400, damping: 10 }
+                }}
+              >
+                {/* Glow effect */}
+                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-30 rounded-full blur-md transition-opacity duration-300"></span>
+                
+                {/* Icon */}
+                <ChevronUp 
+                  className="h-6 w-6 relative z-10 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300" 
+                  strokeWidth={3}
+                />
+                
+                {/* Circle reveal animation on hover */}
+                <motion.span 
+                  className="absolute bottom-0 left-0 right-0 h-0 bg-white/20 z-0"
+                  initial={{ height: 0 }}
+                  whileHover={{ 
+                    height: '100%',
+                    transition: { duration: 0.3 }
+                  }}
+                />
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </footer>
   );
