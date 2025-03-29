@@ -187,16 +187,18 @@ const TravelFilters: React.FC<TravelFiltersProps> = ({ filters, setFilters }) =>
         onChange={handleFilterChange}
       />
       
-      {/* Clear Filters Button */}
+      {/* Clear Filters Button - Fixed to include all required FilterType properties */}
       <Button 
         className="w-full mt-4 bg-white text-travel-blue border-2 border-travel-blue hover:bg-travel-blue hover:text-white hover:text-black"
         onClick={() => setFilters({
+          search: '',
           budget: [],
           duration: [],
           locationType: [],
           activities: [],
           season: [],
-          visaRequirement: []
+          visaRequirement: [],
+          sortBy: 'popularity'
         })}
       >
         Clear All Filters
