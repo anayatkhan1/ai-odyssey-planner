@@ -10,8 +10,6 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
-const queryClient = new QueryClient();
-
 // AnimationWrapper component
 const AnimationWrapper = () => {
   const location = useLocation();
@@ -29,16 +27,22 @@ const AnimationWrapper = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+// Create the query client
+const queryClient = new QueryClient();
+
+// Wrap the application in the proper order of providers
+const App = () => {
+  return (
     <BrowserRouter>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AnimationWrapper />
-      </TooltipProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AnimationWrapper />
+        </TooltipProvider>
+      </QueryClientProvider>
     </BrowserRouter>
-  </QueryClientProvider>
-);
+  );
+};
 
 export default App;
