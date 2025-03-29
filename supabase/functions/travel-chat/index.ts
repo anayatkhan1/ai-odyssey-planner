@@ -104,25 +104,6 @@ serve(async (req) => {
       content: message
     });
 
-    if (!anthropicApiKey) {
-      const placeholderResponse = "I'm your travel assistant, ready to help you plan your journey. I'll be fully operational once we integrate with Anthropic's Claude AI.";
-      
-      // Store placeholder response in chat history
-      await supabase.from('travel_chat_history').insert({
-        session_id: sessionId,
-        user_id: userId || null,
-        role: 'assistant',
-        content: placeholderResponse
-      });
-      
-      return new Response(JSON.stringify({ 
-        response: placeholderResponse,
-        sessionId 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     // Get relevant travel documents for RAG
     const relevantDocs = await getRelevantDocuments(message);
     
