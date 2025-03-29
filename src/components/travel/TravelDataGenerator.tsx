@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { DestinationType } from '@/pages/Travel';
+import { Sparkles, Database, Trash, RefreshCw } from 'lucide-react';
 
 const TravelDataGenerator = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isGeneratingEmbeddings, setIsGeneratingEmbeddings] = useState(false);
 
   const generateDestinationDocument = (destination: DestinationType): string => {
     return `
@@ -86,7 +88,7 @@ The visa requirement is: ${destination.visaRequirement}.
           destination_id: destination.id,
           destination_name: destination.name,
           content: content,
-          // Embeddings will be added later when we have the Anthropic API
+          // Embeddings will be added later
         });
         
         if (error) throw error;
@@ -108,6 +110,71 @@ The visa requirement is: ${destination.visaRequirement}.
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const generateEmbeddings = async () => {
+    setIsGeneratingEmbeddings(true);
+    setProgress(0);
+    
+    try {
+      // Get all documents without embeddings
+      const { data, error } = await supabase
+        .from('travel_documents')
+        .select('id, content')
+        .is('embedding', null);
+      
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        toast({
+          title: "No documents found",
+          description: "No documents found that need embeddings. Try generating travel data first.",
+        });
+        setIsGeneratingEmbeddings(false);
+        return;
+      }
+      
+      toast({
+        title: "Processing",
+        description: `Found ${data.length} documents that need embeddings. This might take a while...`,
+      });
+      
+      // For each document, call the edge function to generate embeddings
+      for (let i = 0; i < data.length; i++) {
+        const document = data[i];
+        
+        // Call edge function to generate embeddings
+        const { error: fnError } = await supabase.functions.invoke('travel-chat', {
+          body: {
+            action: 'generate_embedding',
+            document_id: document.id,
+            content: document.content
+          },
+        });
+        
+        if (fnError) {
+          console.error('Error generating embedding:', fnError);
+          continue; // Continue with other documents even if one fails
+        }
+        
+        // Update progress
+        setProgress(Math.floor(((i + 1) / data.length) * 100));
+      }
+      
+      toast({
+        title: "Success!",
+        description: `Generated embeddings for ${data.length} documents.`,
+      });
+    } catch (error) {
+      console.error('Error generating embeddings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate embeddings. See console for details.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingEmbeddings(false);
     }
   };
 
@@ -137,7 +204,10 @@ The visa requirement is: ${destination.visaRequirement}.
   return (
     <Card className="mb-8 border-3 border-black shadow-neo">
       <CardHeader>
-        <CardTitle>Travel RAG System Data Generator</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-travel-blue" />
+          Travel RAG System Data Generator
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-600">
@@ -147,24 +217,40 @@ The visa requirement is: ${destination.visaRequirement}.
         <div className="flex flex-wrap gap-4">
           <Button
             onClick={populateDatabase}
-            disabled={isLoading}
-            className="bg-travel-blue hover:bg-travel-blue/90"
+            disabled={isLoading || isGeneratingEmbeddings}
+            className="bg-travel-blue hover:bg-travel-blue/90 flex items-center gap-2"
           >
+            <Database className="h-4 w-4" />
             {isLoading ? 'Generating...' : 'Generate Test Data'}
+          </Button>
+          
+          <Button
+            onClick={generateEmbeddings}
+            disabled={isLoading || isGeneratingEmbeddings}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            {isGeneratingEmbeddings ? 'Processing...' : 'Generate Embeddings'}
           </Button>
           
           <Button
             onClick={clearDatabase}
             variant="outline"
-            disabled={isLoading}
+            disabled={isLoading || isGeneratingEmbeddings}
+            className="flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50"
           >
+            <Trash className="h-4 w-4" />
             Clear Database
           </Button>
         </div>
         
-        {progress > 0 && progress < 100 && (
+        {(progress > 0 && progress < 100) && (
           <div className="w-full">
-            <div className="mb-2 text-xs text-gray-600">{progress}% complete</div>
+            <div className="mb-2 text-xs text-gray-600 flex justify-between">
+              <span>{isGeneratingEmbeddings ? 'Generating embeddings...' : 'Creating documents...'}</span>
+              <span>{progress}% complete</span>
+            </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
               <div
                 className="h-full bg-travel-blue transition-all"
@@ -174,8 +260,20 @@ The visa requirement is: ${destination.visaRequirement}.
           </div>
         )}
         
-        <div className="mt-2 text-xs text-gray-500">
-          Note: For proper RAG functionality, you'll need to add embeddings after providing the Anthropic API key.
+        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
+          <p className="font-medium mb-1 flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            How the RAG System Works
+          </p>
+          <ol className="list-decimal pl-4 space-y-1">
+            <li>Generate test data to create travel documents</li>
+            <li>Generate embeddings to enable semantic search</li>
+            <li>Use the travel chat to ask questions about destinations</li>
+            <li>The system will retrieve relevant information and provide informed responses</li>
+          </ol>
+          <p className="mt-2 text-xs text-amber-700">
+            Note: For the RAG functionality to work, you need to add the Anthropic API key in your project settings.
+          </p>
         </div>
       </CardContent>
     </Card>
