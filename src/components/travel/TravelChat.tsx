@@ -5,10 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { MessageCircle, Send, X, Loader2, Plus, Sparkles } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { MessageCircle, Send, X, Loader2, Plus, Sparkles, Plane, User, Bot, MapPin, Globe, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 type Message = {
@@ -16,6 +18,112 @@ type Message = {
   role: 'user' | 'assistant' | 'system';
   content: string;
   createdAt?: string;
+};
+
+// Chat Message Component
+const ChatMessage = ({ message }: { message: Message }) => {
+  const isUser = message.role === 'user';
+  const isSystem = message.role === 'system';
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className={cn(
+        "flex w-full mb-4",
+        isUser ? 'justify-end' : 'justify-start'
+      )}
+    >
+      {!isUser && !isSystem && (
+        <div className="flex items-center justify-center h-8 w-8 rounded-full bg-travel-blue/10 mr-2 flex-shrink-0">
+          <Bot className="h-4 w-4 text-travel-blue" />
+        </div>
+      )}
+      
+      <div
+        className={cn(
+          "max-w-[80%] rounded-2xl px-4 py-3",
+          isUser 
+            ? 'bg-travel-blue text-white rounded-tr-none' 
+            : isSystem
+              ? 'bg-gray-200 text-gray-800 rounded-tl-none'
+              : 'bg-travel-lightBlue text-travel-blue border border-travel-blue/20 rounded-tl-none'
+        )}
+      >
+        <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+      </div>
+      
+      {isUser && (
+        <div className="flex items-center justify-center h-8 w-8 rounded-full bg-travel-blue/20 ml-2 flex-shrink-0">
+          <User className="h-4 w-4 text-travel-blue" />
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+// Quick Prompt Component
+const QuickPrompt = ({ prompt, onClick }: { prompt: string, onClick: (prompt: string) => void }) => {
+  return (
+    <motion.button
+      onClick={() => onClick(prompt)}
+      className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 bg-white 
+                hover:bg-travel-lightBlue hover:border-travel-blue/30 transition-colors 
+                text-gray-700 text-sm group"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <div className="flex items-center">
+        <div className="mr-2 text-travel-blue opacity-70 group-hover:opacity-100">
+          {prompt.includes("visit") ? <Globe className="h-4 w-4" /> : 
+           prompt.includes("budget") ? <Compass className="h-4 w-4" /> :
+           prompt.includes("solo") ? <User className="h-4 w-4" /> :
+           <MapPin className="h-4 w-4" />}
+        </div>
+        <span>{prompt}</span>
+      </div>
+    </motion.button>
+  );
+};
+
+// Empty Chat State Component
+const EmptyChatState = ({ quickPrompts, handleQuickPrompt }: { 
+  quickPrompts: string[], 
+  handleQuickPrompt: (prompt: string) => void 
+}) => {
+  return (
+    <div className="flex h-full flex-col items-center justify-center text-center p-6">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="bg-travel-lightBlue rounded-full p-5 mb-6"
+      >
+        <Plane className="h-10 w-10 text-travel-blue" />
+      </motion.div>
+      
+      <h3 className="text-xl font-semibold text-travel-blue mb-2">Your Travel Assistant</h3>
+      <p className="text-gray-600 mb-8 max-w-xs">
+        Ask me anything about travel destinations, planning tips, or local recommendations!
+      </p>
+      
+      <div className="w-full space-y-3">
+        <div className="flex items-center space-x-2 mb-2">
+          <Badge variant="outline" className="bg-travel-blue/5 text-travel-blue">Popular Questions</Badge>
+          <div className="h-px flex-1 bg-gray-200"></div>
+        </div>
+        
+        {quickPrompts.map((prompt, index) => (
+          <QuickPrompt 
+            key={index} 
+            prompt={prompt} 
+            onClick={handleQuickPrompt} 
+          />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const TravelChat = () => {
@@ -223,83 +331,39 @@ const TravelChat = () => {
             className="fixed bottom-24 right-6 z-50 w-full max-w-md"
           >
             <Card className="flex h-[500px] max-h-[80vh] flex-col overflow-hidden border-3 border-black shadow-neo bg-white">
-              <div className="flex items-center justify-between border-b p-3 bg-travel-blue/10">
+              <div className="flex items-center justify-between border-b p-3 bg-travel-blue text-white">
                 <div className="flex items-center gap-2">
-                  <div className="bg-travel-blue rounded-full p-1">
-                    <Sparkles className="h-4 w-4 text-white" />
+                  <div className="bg-white rounded-full p-1">
+                    <Sparkles className="h-4 w-4 text-travel-blue" />
                   </div>
-                  <h3 className="font-archivo text-lg font-bold text-travel-blue">Travel Assistant</h3>
+                  <h3 className="font-archivo text-lg font-bold">Travel Assistant</h3>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={startNewChat}
-                  className="text-xs hover:bg-travel-blue/10"
+                  className="text-xs hover:bg-travel-blue/20 text-white"
                 >
                   <Plus className="h-3 w-3 mr-1" />
                   New Chat
                 </Button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50">
+              <ScrollArea className="flex-1 p-4 bg-[#f8fafc]">
                 {messages.length === 0 ? (
-                  <div className="flex h-full flex-col items-center justify-center text-center p-6">
-                    <div className="bg-travel-blue/10 rounded-full p-4 mb-4">
-                      <MessageCircle className="h-10 w-10 text-travel-blue" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-travel-blue mb-2">Travel Assistant</h3>
-                    <p className="text-gray-600 mb-8 max-w-xs">
-                      Ask me anything about travel destinations, planning tips, or local recommendations!
-                    </p>
-                    
-                    <div className="w-full space-y-2">
-                      <p className="text-sm text-gray-500 font-medium">Try asking:</p>
-                      {quickPrompts.map((prompt, index) => (
-                        <motion.button
-                          key={index}
-                          onClick={() => handleQuickPrompt(prompt)}
-                          className="w-full text-left px-4 py-2 rounded-lg border border-gray-200 bg-white 
-                                    hover:bg-travel-blue/5 hover:border-travel-blue/30 transition-colors 
-                                    text-gray-700 text-sm"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          {prompt}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
+                  <EmptyChatState 
+                    quickPrompts={quickPrompts} 
+                    handleQuickPrompt={handleQuickPrompt} 
+                  />
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-1 p-1">
                     {messages.map((msg, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className={cn(
-                          "flex",
-                          msg.role === 'user' ? 'justify-end' : 'justify-start'
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "max-w-[80%] rounded-2xl px-4 py-3",
-                            msg.role === 'user' 
-                              ? 'bg-travel-blue text-white rounded-tr-none' 
-                              : msg.role === 'system'
-                                ? 'bg-gray-200 text-gray-800 rounded-tl-none'
-                                : 'bg-gray-100 text-gray-800 border border-gray-200 rounded-tl-none'
-                          )}
-                        >
-                          <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
-                        </div>
-                      </motion.div>
+                      <ChatMessage key={index} message={msg} />
                     ))}
                     <div ref={messagesEndRef} />
                   </div>
                 )}
-              </div>
+              </ScrollArea>
               
               <div className="border-t p-3 bg-white">
                 <div className="flex gap-2">
@@ -309,7 +373,7 @@ const TravelChat = () => {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Ask about travel destinations..."
-                    className="min-h-[50px] resize-none focus-visible:ring-travel-blue/50 rounded-lg"
+                    className="min-h-[50px] resize-none focus-visible:ring-travel-blue/50 rounded-lg bg-gray-50"
                     disabled={isLoading}
                   />
                   <Button
