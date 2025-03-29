@@ -15,22 +15,39 @@ export async function getChatResponse(messages: Message[], destination?: string)
       content,
     }));
 
-    // Call the Supabase edge function
-    const { data, error } = await supabase.functions.invoke('travel-chat', {
-      body: { 
-        messages: formattedMessages,
-        destination
-      },
-    });
+    try {
+      // Call the Supabase edge function
+      const { data, error } = await supabase.functions.invoke('travel-chat', {
+        body: { 
+          messages: formattedMessages,
+          destination
+        },
+      });
 
-    if (error) {
-      console.error('Error calling travel-chat function:', error);
-      throw new Error(error.message);
+      if (error) {
+        console.error('Error calling travel-chat function:', error);
+        // Return a fallback response instead of throwing
+        return {
+          role: 'assistant',
+          content: "I'm sorry, I couldn't process your request right now. Please try again later."
+        };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in getChatResponse:', error);
+      // Return a fallback response
+      return {
+        role: 'assistant',
+        content: "I'm having trouble connecting to the service. Please try again in a moment."
+      };
     }
-
-    return data;
   } catch (error) {
-    console.error('Error in getChatResponse:', error);
-    throw error;
+    console.error('Error formatting messages:', error);
+    // Return a fallback response
+    return {
+      role: 'assistant',
+      content: "There was an error processing your message. Please try again."
+    };
   }
 }
