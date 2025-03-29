@@ -18,17 +18,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Handle auth state changes, including redirect results
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
+        
+        // Dispatch an event for debugging
+        const authEvent = new CustomEvent('supabase.auth.session', { 
+          detail: { event, session: currentSession }
+        });
+        window.dispatchEvent(authEvent);
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       console.log("Initial session check:", currentSession?.user?.email);
       setSession(currentSession);

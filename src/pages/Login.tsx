@@ -28,22 +28,46 @@ const LoginPage = () => {
     }
   }, [user, navigate]);
 
-  // Check for auth callback in URL
+  // Check if we have a hash in the URL (OAuth callback)
   useEffect(() => {
-    const checkForCallback = async () => {
-      if (window.location.search.includes('callback=auth')) {
+    const handleHashRedirect = async () => {
+      // Extract hash and query parameters
+      const hash = window.location.hash;
+      const query = window.location.search;
+      
+      // Check if we have a hash or auth callback
+      if (hash.includes('access_token=') || query.includes('callback=auth')) {
+        console.log("Detected auth callback or token in URL");
+        
+        // Get the session
         const { data, error } = await supabase.auth.getSession();
+        
         if (data.session) {
+          console.log("Session found, redirecting to /app");
+          // Clear the hash from the URL
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, document.title, window.location.pathname);
+          }
+          
           toast({
             title: "Success",
             description: "You have been logged in successfully",
           });
+          
+          // Redirect to protected route
           navigate('/app');
+        } else if (error) {
+          console.error("Session error:", error);
+          toast({
+            title: "Error",
+            description: error.message || "An error occurred during authentication",
+            variant: "destructive"
+          });
         }
       }
     };
     
-    checkForCallback();
+    handleHashRedirect();
   }, [navigate, toast]);
 
   const handleEmailSignIn = async (e: FormEvent) => {
