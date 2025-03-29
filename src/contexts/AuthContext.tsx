@@ -37,16 +37,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           pathname: window.location.pathname
         });
         
-        // If we get a SIGNED_IN or INITIAL_SESSION with a user while on the login page, redirect to /travel
+        // If we get a SIGNED_IN or INITIAL_SESSION with a user while on the login page, redirect to /app
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && 
             currentSession && 
             window.location.pathname.includes('/login')) {
-          console.log("Auth detected authenticated session while on login page, redirecting to /travel");
+          console.log("Auth detected authenticated session while on login page, redirecting to /app");
           
           // Use timeout to ensure state is updated before redirect
           setTimeout(() => {
-            window.location.href = '/travel';
-          }, 500); // Increased timeout for more reliable redirection
+            window.location.href = '/app';
+          }, 300);
         }
       }
     );
@@ -66,14 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(data.session);
         setUser(data.session?.user ?? null);
         
-        // If we have a session and we're on the login page, redirect to /travel
+        // If we have a session and we're on the login page, redirect to /app
         if (data.session && window.location.pathname.includes('/login')) {
-          console.log("Found existing session while on login page, redirecting to /travel");
+          console.log("Found existing session while on login page, redirecting to /app");
           
           // Use timeout to ensure state is updated before redirect
           setTimeout(() => {
-            window.location.href = '/travel';
-          }, 500); // Increased timeout for more reliable redirection
+            window.location.href = '/app';
+          }, 300);
         }
       } catch (err) {
         console.error("Error initializing auth:", err);

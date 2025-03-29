@@ -1,111 +1,145 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Plane, Menu, X, LogIn, Info, } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-
-const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) => (
-  <Link to={to} className="text-sm font-bold text-gray-700 hover:text-neo-blue transition-colors">
-    {children}
-  </Link>
-);
-
-const MobileNavLink = ({ to, children, onClick }: { to: string; children: React.ReactNode; onClick: () => void }) => (
-  <Link
-    to={to}
-    className="block px-4 py-2 text-black font-bold hover:bg-neo-yellow/20 rounded-lg"
-    onClick={onClick}
-  >
-    {children}
-  </Link>
-);
+import { Globe, Menu, X, ChevronRight } from "lucide-react";
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 20);
     };
-
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+    // Prevent scrolling when mobile menu is open
+    document.body.style.overflow = mobileMenuOpen ? 'auto' : 'hidden';
+  };
+
+  // Clean up effect to reset overflow when component unmounts
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
+  const navItems = ["Features", "How It Works", "Pricing", "Testimonials", "FAQ"];
+
+  // Don't show navbar on login and signup pages
+  if (location.pathname === '/login' || location.pathname === '/signup') {
+    return null;
+  }
+
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 transition-colors duration-300">
-      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${isScrolled ? 'py-3' : 'py-5'}`}>
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="bg-neo-blue text-white p-2 rounded-lg border-3 border-black shadow-neo transform transition-transform hover:rotate-6">
-                <Plane size={24} className="animate-bounce-slow" />
-              </div>
-              <span className="text-2xl font-archivo font-black tracking-wider">Voyagent</span>
-            </Link>
+    <nav 
+      className={`fixed w-full z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white/95 backdrop-blur-sm shadow-neo-sm py-3 border-b-3 border-black' 
+          : 'bg-transparent py-5'
+      }`}
+    >
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <div className={`bg-neo-blue text-white p-2 rounded-lg border-3 border-black shadow-neo transition-transform hover:rotate-12 duration-300 ${
+            isScrolled ? 'scale-90' : 'scale-100'
+          }`}>
+            <Globe className="h-6 w-6" strokeWidth={3} />
           </div>
-          
-          {/* Navigation Links - visible on large screens */}
-          <div className="hidden md:flex items-center space-x-6">
-            <NavLink to="/#features">Features</NavLink>
-            <NavLink to="/#how-it-works">How It Works</NavLink>
-            <NavLink to="/#pricing">Pricing</NavLink>
-            <NavLink to="/#faq">FAQ</NavLink>
-            
-            <div className="pl-6 border-l border-gray-300">
-              <Link to="/auth">
-                <Button className="bg-neo-green text-black border-3 border-black shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Sign In
+          <span className={`text-2xl font-archivo font-black text-black transition-all duration-300 ${
+            isScrolled ? 'scale-95' : 'scale-100'
+          }`}>Voyagent</span>
+        </div>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-6">
+          {navItems.map((item, index) => (
+            <a 
+              key={index} 
+              href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+              className="font-archivo font-bold hover:text-neo-blue transition-colors px-3 py-1 hover:bg-neo-yellow/20 rounded relative group overflow-hidden"
+            >
+              {item}
+              <span className="absolute bottom-0 left-0 w-0 h-1 bg-neo-blue transition-all duration-300 group-hover:w-full"></span>
+            </a>
+          ))}
+        </div>
+
+        <div className="hidden md:flex items-center space-x-4">
+          <Link to="/login">
+            <Button className="font-archivo font-bold bg-white border-3 border-black text-black hover:bg-gray-100 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform group">
+              Log in
+            </Button>
+          </Link>
+          <Link to="/signup">
+            <Button className="font-archivo font-bold bg-neo-blue border-3 border-black text-white hover:bg-neo-blue/90 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-transform group">
+              Sign up free
+              <ChevronRight className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+            </Button>
+          </Link>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <div className="md:hidden">
+          <Button 
+            onClick={toggleMobileMenu}
+            variant="ghost" 
+            className="p-2 border-3 border-black rounded-lg shadow-neo bg-white hover:bg-neo-yellow/30 transition-colors"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Menu with improved animation */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed top-[72px] left-0 w-full h-[calc(100vh-72px)] bg-neo-background border-t-3 border-black z-50 overflow-y-auto animate-fade-in">
+          <div className="flex flex-col p-6 space-y-5">
+            {navItems.map((item, index) => (
+              <a 
+                key={index} 
+                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                className={`font-archivo font-bold text-lg px-6 py-4 hover:bg-neo-yellow/20 rounded-lg border-3 border-black shadow-neo-sm hover:translate-x-2 hover:translate-y-2 hover:shadow-none transition-transform relative overflow-hidden group animate-fade-in`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  document.body.style.overflow = 'auto';
+                }}
+              >
+                {item}
+                <ChevronRight className="absolute right-4 opacity-0 group-hover:opacity-100 transition-all" />
+              </a>
+            ))}
+            <div className="pt-6 flex flex-col space-y-4 border-t-3 border-black animate-fade-in" style={{ animationDelay: '0.5s' }}>
+              <Link to="/login" onClick={() => {
+                setMobileMenuOpen(false);
+                document.body.style.overflow = 'auto';
+              }}>
+                <Button className="w-full font-archivo font-bold bg-white border-3 border-black text-black hover:bg-gray-100 shadow-neo hover:translate-y-2 hover:translate-x-2 hover:shadow-none transition-transform h-14">
+                  Log in
+                </Button>
+              </Link>
+              <Link to="/signup" onClick={() => {
+                setMobileMenuOpen(false);
+                document.body.style.overflow = 'auto';
+              }}>
+                <Button className="w-full font-archivo font-bold bg-neo-blue border-3 border-black text-white hover:bg-neo-blue/90 shadow-neo hover:translate-y-2 hover:translate-x-2 hover:shadow-none transition-transform h-14 group">
+                  Sign up free
+                  <ChevronRight className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </Button>
               </Link>
             </div>
           </div>
-          
-          {/* Mobile Menu Button - visible on small screens */}
-          <div className="md:hidden">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="relative border-3 border-black"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X /> : <Menu />}
-            </Button>
-          </div>
         </div>
-      </div>
-      
-      {/* Mobile Menu - conditional rendering */}
-      {mobileMenuOpen && (
-        <motion.div 
-          className="md:hidden bg-white border-b-3 border-t-3 border-black shadow-neo"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="px-4 pt-2 pb-4 space-y-1">
-            <MobileNavLink to="/#features" onClick={() => setMobileMenuOpen(false)}>Features</MobileNavLink>
-            <MobileNavLink to="/#how-it-works" onClick={() => setMobileMenuOpen(false)}>How It Works</MobileNavLink>
-            <MobileNavLink to="/#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
-            <MobileNavLink to="/#faq" onClick={() => setMobileMenuOpen(false)}>FAQ</MobileNavLink>
-            
-            <div className="pt-2 mt-2 border-t border-gray-200">
-              <Link 
-                to="/auth" 
-                className="block px-4 py-2 text-black font-bold hover:bg-neo-yellow/20 rounded-lg"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Sign In
-              </Link>
-            </div>
-          </div>
-        </motion.div>
       )}
-    </div>
+    </nav>
   );
 };
 
