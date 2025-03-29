@@ -8,36 +8,41 @@ const PricingPlan = ({
   price, 
   description, 
   features, 
-  popular = false 
+  popular = false,
+  rotation = 0
 }: { 
   name: string; 
   price: string; 
   description: string; 
   features: string[]; 
-  popular?: boolean; 
+  popular?: boolean;
+  rotation?: number;
 }) => {
   return (
-    <div className={`border rounded-xl p-8 shadow-lg ${popular ? 'border-travel-orange border-2 relative' : 'border-gray-200'}`}>
+    <div 
+      className={`border-5 rounded-xl p-8 ${popular ? 'bg-neo-yellow border-black relative z-10 shadow-neo-lg' : 'bg-white border-black shadow-neo'}`}
+      style={{ transform: `rotate(${rotation}deg)` }}
+    >
       {popular && (
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-travel-orange text-white px-4 py-1 rounded-full text-sm font-bold">
+        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-neo-pink text-white px-6 py-2 rounded-lg font-archivo text-lg border-3 border-black shadow-neo">
           Most Popular
         </div>
       )}
-      <h3 className="text-xl font-bold mb-2">{name}</h3>
-      <div className="mb-4">
+      <h3 className="text-2xl font-archivo font-black mb-2">{name}</h3>
+      <div className="mb-4 font-space-mono">
         <span className="text-4xl font-bold">{price}</span>
-        {price !== 'Free' && <span className="text-gray-500">/month</span>}
+        {price !== 'Free' && <span className="text-black">/month</span>}
       </div>
-      <p className="text-gray-600 mb-6">{description}</p>
+      <p className="text-black mb-6 font-space-grotesk">{description}</p>
       <ul className="space-y-3 mb-8">
         {features.map((feature, index) => (
           <li key={index} className="flex items-start">
-            <Check className="h-5 w-5 text-travel-teal mr-2 flex-shrink-0 mt-0.5" />
-            <span>{feature}</span>
+            <Check className="h-6 w-6 text-neo-blue mr-2 flex-shrink-0 mt-0.5" strokeWidth={3} />
+            <span className="font-space-grotesk text-black">{feature}</span>
           </li>
         ))}
       </ul>
-      <Button className={`w-full ${popular ? 'bg-travel-orange text-black hover:bg-travel-orange/90' : 'bg-travel-blue text-white hover:bg-travel-blue/90'}`}>
+      <Button className={`w-full border-3 border-black ${popular ? 'bg-neo-blue text-white hover:bg-neo-blue/90' : 'bg-neo-yellow text-black hover:bg-neo-yellow/90'} shadow-neo transition-transform hover:translate-y-1 hover:translate-x-1 hover:shadow-none font-archivo font-black`}>
         {price === 'Free' ? 'Sign Up Free' : 'Get Started'}
       </Button>
     </div>
@@ -55,7 +60,8 @@ const Pricing = () => {
         "Destination recommendations",
         "Basic budget optimization",
         "Mobile app access"
-      ]
+      ],
+      rotation: -1
     },
     {
       name: "Voyager",
@@ -68,7 +74,8 @@ const Pricing = () => {
         "Offline access to itineraries",
         "Priority customer support"
       ],
-      popular: true
+      popular: true,
+      rotation: 0
     },
     {
       name: "Globetrotter",
@@ -81,42 +88,47 @@ const Pricing = () => {
         "Premium partner discounts",
         "Dedicated travel consultant",
         "Custom travel guides"
-      ]
+      ],
+      rotation: 1
     }
   ];
 
   return (
-    <section id="pricing" className="section-container">
-      <div className="text-center mb-16">
-        <h2 className="section-heading">Simple, Transparent Pricing</h2>
-        <p className="max-w-2xl mx-auto text-lg text-gray-600">
-          Choose the plan that best fits your travel style. All plans include our core AI-powered features.
-        </p>
-      </div>
+    <section id="pricing" className="section-container relative">
+      <div className="absolute inset-0 grid-bg opacity-20"></div>
+      <div className="relative">
+        <div className="text-center mb-16">
+          <h2 className="section-heading">Simple, Transparent Pricing</h2>
+          <p className="max-w-2xl mx-auto text-lg text-black font-space-grotesk">
+            Choose the plan that best fits your travel style. All plans include our core AI-powered features.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {plans.map((plan, index) => (
-          <PricingPlan 
-            key={index}
-            name={plan.name}
-            price={plan.price}
-            description={plan.description}
-            features={plan.features}
-            popular={plan.popular}
-          />
-        ))}
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {plans.map((plan, index) => (
+            <PricingPlan 
+              key={index}
+              name={plan.name}
+              price={plan.price}
+              description={plan.description}
+              features={plan.features}
+              popular={plan.popular}
+              rotation={plan.rotation}
+            />
+          ))}
+        </div>
 
-      <div className="mt-12 bg-gray-50 p-6 rounded-lg max-w-3xl mx-auto">
-        <h3 className="text-xl font-bold mb-4 text-center">Frequently Asked Questions</h3>
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-bold mb-1">Can I cancel my subscription anytime?</h4>
-            <p className="text-gray-600">Yes, you can cancel your subscription at any time with no questions asked. You'll continue to have access until the end of your billing period.</p>
-          </div>
-          <div>
-            <h4 className="font-bold mb-1">Is my data secure?</h4>
-            <p className="text-gray-600">Your privacy is our priority. We use industry-standard encryption to protect your data and never share your personal information with third parties.</p>
+        <div className="mt-12 bg-white p-6 rounded-xl max-w-3xl mx-auto border-5 border-black shadow-neo">
+          <h3 className="text-xl font-archivo font-black mb-4 text-center">Frequently Asked Questions</h3>
+          <div className="space-y-4">
+            <div className="p-4 border-3 border-black rounded-lg">
+              <h4 className="font-archivo font-black mb-1">Can I cancel my subscription anytime?</h4>
+              <p className="text-black font-space-grotesk">Yes, you can cancel your subscription at any time with no questions asked. You'll continue to have access until the end of your billing period.</p>
+            </div>
+            <div className="p-4 border-3 border-black rounded-lg">
+              <h4 className="font-archivo font-black mb-1">Is my data secure?</h4>
+              <p className="text-black font-space-grotesk">Your privacy is our priority. We use industry-standard encryption to protect your data and never share your personal information with third parties.</p>
+            </div>
           </div>
         </div>
       </div>

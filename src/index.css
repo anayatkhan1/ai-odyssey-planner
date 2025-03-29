@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:wght@300;400;700&family=Archivo+Black&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -75,36 +75,46 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-neo-background text-foreground;
   }
 
   h1, h2, h3, h4 {
-    @apply font-sans font-bold tracking-tight;
+    @apply font-archivo font-black tracking-tight;
   }
 
   p {
-    @apply font-serif;
+    @apply font-space-grotesk;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-travel-blue text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
+    @apply bg-neo-blue text-white border-3 border-black px-6 py-3 rounded-lg font-bold shadow-neo transition-transform hover:translate-y-1 hover:translate-x-1 hover:shadow-none active:translate-y-1 active:translate-x-1 active:shadow-none;
   }
   
   .btn-secondary {
-    @apply bg-travel-orange text-black px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
+    @apply bg-neo-yellow text-black border-3 border-black px-6 py-3 rounded-lg font-bold shadow-neo transition-transform hover:translate-y-1 hover:translate-x-1 hover:shadow-none active:translate-y-1 active:translate-x-1 active:shadow-none;
   }
 
   .feature-card {
-    @apply bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300;
+    @apply bg-white rounded-xl border-3 border-black shadow-neo p-6 transition-transform hover:translate-y-1 hover:translate-x-1 hover:shadow-none;
+  }
+
+  .neo-card {
+    @apply bg-white border-3 border-black shadow-neo rounded-xl p-6 transition-transform hover:translate-y-1 hover:translate-x-1 hover:shadow-none;
   }
 
   .section-heading {
-    @apply text-3xl md:text-4xl font-bold mb-6 text-center;
+    @apply text-3xl md:text-4xl font-archivo font-black mb-6 text-center;
   }
 
   .section-container {
     @apply max-w-7xl mx-auto px-4 py-16 md:py-24;
+  }
+  
+  .grid-bg {
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
   }
 }

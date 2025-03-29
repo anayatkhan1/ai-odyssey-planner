@@ -63,6 +63,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				// Neobrutalism colors
+				neo: {
+					blue: '#0066FF',     // Electric blue
+					yellow: '#FFD100',   // Vibrant yellow
+					pink: '#FF3864',     // Hot pink
+					green: '#00FFAA',    // Mint green
+					orange: '#FF9E00',   // Bright orange
+					background: '#F7F7F2', // Off-white background
+					black: '#000000',    // Pure black for borders
+					white: '#FFFFFF',    // White
+				},
 				travel: {
 					blue: '#0A3D62',
 					orange: '#FF9F43',
@@ -74,7 +85,12 @@ export default {
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 4px)',
+				'neo': '16px',  // Exaggerated rounded corners for neo-brutalism
+			},
+			borderWidth: {
+				'3': '3px',
+				'5': '5px',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -100,17 +116,29 @@ export default {
 				'fade-in': {
 					'0%': { opacity: '0', transform: 'translateY(20px)' },
 					'100%': { opacity: '1', transform: 'translateY(0)' }
-				}
+				},
+				'push-down': {
+					'0%': { transform: 'translateY(0) translateX(0)' },
+					'100%': { transform: 'translateY(4px) translateX(4px)' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'float': 'float 5s ease-in-out infinite',
-				'fade-in': 'fade-in 0.7s ease-out forwards'
+				'fade-in': 'fade-in 0.7s ease-out forwards',
+				'push-down': 'push-down 0.1s ease-out forwards',
 			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
-				serif: ['Merriweather', 'serif']
+				serif: ['Merriweather', 'serif'],
+				'archivo': ['Archivo Black', 'sans-serif'],
+				'space-grotesk': ['Space Grotesk', 'sans-serif'],
+				'space-mono': ['Space Mono', 'monospace'],
+			},
+			boxShadow: {
+				'neo': '4px 4px 0 0 #000000',
+				'neo-lg': '8px 8px 0 0 #000000',
 			}
 		}
 	},
