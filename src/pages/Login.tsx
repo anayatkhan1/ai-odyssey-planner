@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
@@ -21,7 +20,6 @@ const LoginPage = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Check URL parameters for errors
     const url = new URL(window.location.href);
     const errorDescription = url.searchParams.get("error_description");
     
@@ -32,12 +30,10 @@ const LoginPage = () => {
         variant: "destructive"
       });
       
-      // Clear the error from the URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [toast]);
   
-  // Handle Google OAuth sign in
   const handleOAuthSignIn = async () => {
     try {
       setIsOAuthLoading(true);
@@ -66,7 +62,6 @@ const LoginPage = () => {
     }
   };
 
-  // Handle Email/Password sign in
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -118,7 +113,6 @@ const LoginPage = () => {
     );
   }
 
-  // If user is already logged in, we can show a message
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-blue-50 to-white">
@@ -153,12 +147,10 @@ const LoginPage = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* Animated background elements */}
       <div className="absolute top-12 right-32 w-20 h-20 bg-neo-pink rounded-full border-3 border-black z-0 animate-float"></div>
       <div className="absolute bottom-40 left-10 w-16 h-16 bg-neo-green rounded-lg border-3 border-black z-0 rotate-12 animate-bounce-slow"></div>
       <div className="absolute top-1/2 left-1/4 w-12 h-12 bg-neo-yellow rounded-lg border-3 border-black z-0 animate-spin-slow"></div>
       
-      {/* Left column - imagery & brand */}
       <div className="hidden md:flex flex-col relative items-center justify-center p-8 overflow-hidden">
         <div className="relative bg-white border-5 border-black rounded-xl shadow-neo-lg p-8 w-full max-w-md z-10 transform -rotate-1">
           <div className="flex items-center space-x-3 mb-6">
@@ -206,13 +198,10 @@ const LoginPage = () => {
           </div>
         </div>
         
-        {/* Grid lines background for left panel */}
         <div className="absolute inset-0 grid-bg z-0"></div>
       </div>
       
-      {/* Right column - login form */}
       <div className="flex flex-col items-center justify-center p-4 md:p-8 relative">
-        {/* Abstract triangle shape */}
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-neo-blue/20 rounded-tl-[100px] border-t-3 border-l-3 border-black z-0"></div>
         
         <div className="w-full max-w-md relative z-10">
@@ -224,7 +213,6 @@ const LoginPage = () => {
           </Link>
           
           <Card className="border-5 border-black shadow-neo-lg bg-white relative z-10 overflow-hidden">
-            {/* Colorful top border */}
             <div className="flex w-full h-2">
               <div className="w-1/4 bg-neo-blue"></div>
               <div className="w-1/4 bg-neo-pink"></div>
@@ -238,7 +226,6 @@ const LoginPage = () => {
             </CardHeader>
             
             <CardContent className="space-y-6">
-              {/* Email/Password form */}
               <form onSubmit={handleEmailSignIn} className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="font-bold flex items-center">
