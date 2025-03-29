@@ -19,6 +19,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Travel from "./pages/Travel";
 import Profile from "./pages/Profile";
 import Navbar from "./components/Navbar";
+import TravelChat from "./components/travel/TravelChat";
 
 // AnimationWrapper component
 const AnimationWrapper = () => {
@@ -58,6 +59,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <AnimationWrapper />
+            <TravelChat />
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
