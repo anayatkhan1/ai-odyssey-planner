@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 type AuthContextType = {
   isLoading: boolean;
@@ -16,11 +17,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     console.log("Setting up auth state listener");
     
-    // Handle auth state changes, including redirect results
+    // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
@@ -28,7 +30,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Update state with the new session information
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        setIsLoading(false);
+        
+        if (isLoading) {
+          setIsLoading(false);
+        }
         
         // Log the auth state change to help with debugging
         console.log("Auth session changed:", {
@@ -37,22 +42,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           pathname: window.location.pathname
         });
         
-        // If we get a SIGNED_IN or INITIAL_SESSION with a user while on the login page, redirect to /app
-        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && 
-            currentSession && 
-            window.location.pathname.includes('/login')) {
-          console.log("Auth detected authenticated session while on login page, redirecting to /app");
+        // Handle auth state changes
+        if (event === 'SIGNED_IN' && currentSession) {
+          // Show success toast on sign in
+          toast({
+            title: "Successfully signed in",
+            description: `Welcome ${currentSession.user.email}`,
+          });
           
-          // Use timeout to ensure state is updated before redirect
-          setTimeout(() => {
-            window.location.href = '/app';
-          }, 300);
+          // Redirect to /travel after successful login if on login page
+          if (window.location.pathname.includes('/login')) {
+            console.log("Redirecting to /travel after sign in");
+            window.location.href = '/travel';
+          }
+        } else if (event === 'SIGNED_OUT') {
+          // Show toast on sign out
+          toast({
+            title: "Signed out",
+            description: "You have been signed out successfully",
+          });
         }
       }
     );
 
-    // Check for existing session
-    const initializeAuth = async () => {
+    // Then check for existing session
+    const checkExistingSession = async () => {
       try {
         console.log("Checking for existing session");
         const { data, error } = await supabase.auth.getSession();
@@ -66,14 +80,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(data.session);
         setUser(data.session?.user ?? null);
         
-        // If we have a session and we're on the login page, redirect to /app
+        // If we have a session and we're on the login page, redirect to /travel
         if (data.session && window.location.pathname.includes('/login')) {
-          console.log("Found existing session while on login page, redirecting to /app");
-          
-          // Use timeout to ensure state is updated before redirect
-          setTimeout(() => {
-            window.location.href = '/app';
-          }, 300);
+          console.log("Found existing session while on login page, redirecting to /travel");
+          window.location.href = '/travel';
         }
       } catch (err) {
         console.error("Error initializing auth:", err);
@@ -82,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    initializeAuth();
+    checkExistingSession();
 
     return () => {
       console.log("Cleaning up auth subscription");
@@ -94,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Signing out");
       await supabase.auth.signOut();
-      window.location.href = '/';
+      // Redirect is handled by the auth state change listener
     } catch (error) {
       console.error("Error signing out:", error);
       throw error;
