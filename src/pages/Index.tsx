@@ -11,7 +11,6 @@ import Pricing from '@/components/Pricing';
 import FAQ from '@/components/FAQ';
 import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
-import { ChevronUp } from 'lucide-react';
 
 // Animation variants for page transitions
 const pageVariants = {
@@ -71,14 +70,6 @@ const Index = () => {
       document.documentElement.style.scrollBehavior = 'auto';
     };
   }, []);
-
-  // Handle scroll to top
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
 
   // Handle navigation link clicks for smooth scrolling
   useEffect(() => {
@@ -188,23 +179,6 @@ const Index = () => {
           
           <Footer />
         </motion.div>
-        
-        {/* Scroll to top button */}
-        <motion.button
-          className={`fixed bottom-6 right-6 z-50 bg-neo-blue border-3 border-black rounded-full p-3 shadow-neo hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all duration-300 ${
-            showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-          onClick={scrollToTop}
-          initial={{ scale: 0 }}
-          animate={{ 
-            scale: showScrollTop ? 1 : 0,
-            rotate: showScrollTop ? 0 : 90
-          }}
-          transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
-          aria-label="Scroll to top"
-        >
-          <ChevronUp className="text-white" strokeWidth={3} />
-        </motion.button>
       </motion.div>
     </AnimatePresence>
   );

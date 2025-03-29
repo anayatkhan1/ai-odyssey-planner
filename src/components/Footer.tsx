@@ -1,9 +1,16 @@
-
 import React from 'react';
 import { Globe, Instagram, Twitter, Facebook, Linkedin, Mail, MapPin, Phone, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from 'framer-motion';
 
 const Footer = () => {
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
   return (
     <footer className="bg-gradient-to-b from-neo-black to-slate-900 text-white pt-20 pb-10 border-t-5 border-black relative overflow-hidden">
       {/* Background decorative pattern */}
@@ -159,7 +166,6 @@ const Footer = () => {
           </div>
         </div>
         
-        {/* Newsletter signup */}
         <div className="mb-16 relative">
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 relative overflow-hidden transform hover:translate-y-1 hover:translate-x-1 transition-transform duration-300">
             <div className="absolute inset-0 bg-gradient-to-r from-neo-blue/10 to-neo-pink/10 opacity-20"></div>
@@ -203,17 +209,27 @@ const Footer = () => {
           </div>
         </div>
         
-        {/* Go to top button */}
         <div className="absolute right-6 bottom-0">
-          <a 
-            href="#top" 
+          <motion.button 
+            onClick={scrollToTop}
             className="bg-neo-yellow text-black border-3 border-black rounded-lg p-2 shadow-neo-sm hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all block"
-            aria-label="Go to top"
+            aria-label="Scroll to top"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ y: 0 }}
+            animate={{ 
+              y: [0, -5, 0],
+              transition: {
+                duration: 1.5,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }
+            }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
             </svg>
-          </a>
+          </motion.button>
         </div>
       </div>
     </footer>
