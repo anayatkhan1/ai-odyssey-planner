@@ -39,7 +39,7 @@ const Navbar = () => {
           : 'bg-transparent py-5'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <div className={`bg-neo-blue text-white p-2 rounded-lg border-3 border-black shadow-neo transition-transform hover:rotate-12 duration-300 ${
             isScrolled ? 'scale-90' : 'scale-100'

@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:wght@300;400;700&family=Archivo+Black&family=Space+Grotesk:wght@400;700&family=Space+Mono:wght@400;700&display=swap');
 
 @tailwind base;
@@ -75,6 +76,10 @@
 
   body {
     @apply bg-neo-background text-foreground;
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   h1, h2, h3, h4 {
@@ -108,7 +113,7 @@
   }
 
   .section-container {
-    @apply max-w-7xl mx-auto px-4 py-16 md:py-24;
+    @apply max-w-7xl mx-auto px-4 py-16 md:py-24 w-full;
   }
   
   .grid-bg {
@@ -145,26 +150,7 @@
   }
 }
 
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
+/* Remove the root max-width which was causing inconsistencies */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);

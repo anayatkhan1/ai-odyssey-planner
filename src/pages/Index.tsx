@@ -13,17 +13,19 @@ import Footer from '@/components/Footer';
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="w-full min-h-screen overflow-x-hidden">
       <Navbar />
-      <Hero />
-      <Features />
-      <HowItWorks />
-      <AIAdvantage />
-      <Testimonials />
-      <Pricing />
-      <FAQ />
-      <CTASection />
-      <Footer />
+      <div className="w-full">
+        <Hero />
+        <Features />
+        <HowItWorks />
+        <AIAdvantage />
+        <Testimonials />
+        <Pricing />
+        <FAQ />
+        <CTASection />
+        <Footer />
+      </div>
     </div>
   );
 };
