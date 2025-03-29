@@ -129,12 +129,6 @@ const HowItWorks = () => {
               </span>
             </Button>
           </div>
-          
-          <div className="mt-8 flex justify-center">
-            <a href="#features" className="flex items-center text-black font-archivo font-bold text-lg hover:text-neo-blue transition-colors">
-              Discover All Features <ArrowUpRight className="ml-1 w-5 h-5" />
-            </a>
-          </div>
         </div>
       </div>
     </section>
