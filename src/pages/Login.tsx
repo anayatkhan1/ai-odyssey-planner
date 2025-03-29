@@ -1,7 +1,7 @@
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { LogIn, ArrowLeft } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -16,7 +17,34 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Redirect to /app if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/app');
+    }
+  }, [user, navigate]);
+
+  // Check for auth callback in URL
+  useEffect(() => {
+    const checkForCallback = async () => {
+      if (window.location.search.includes('callback=auth')) {
+        const { data, error } = await supabase.auth.getSession();
+        if (data.session) {
+          toast({
+            title: "Success",
+            description: "You have been logged in successfully",
+          });
+          navigate('/app');
+        }
+      }
+    };
+    
+    checkForCallback();
+  }, [navigate, toast]);
 
   const handleEmailSignIn = async (e: FormEvent) => {
     e.preventDefault();
@@ -39,7 +67,7 @@ const LoginPage = () => {
       if (error) throw error;
       
       if (data.session) {
-        navigate('/');
+        navigate('/app');
         toast({
           title: "Success",
           description: "You have been logged in successfully",

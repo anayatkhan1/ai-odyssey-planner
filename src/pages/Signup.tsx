@@ -1,5 +1,5 @@
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, ArrowLeft, Check } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
@@ -19,6 +20,14 @@ const SignupPage = () => {
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Redirect to /app if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/app');
+    }
+  }, [user, navigate]);
 
   const handleEmailSignUp = async (e: FormEvent) => {
     e.preventDefault();
@@ -52,7 +61,13 @@ const SignupPage = () => {
           title: "Account created",
           description: "Please check your email to verify your account.",
         });
-        navigate('/login');
+        
+        // If auto-confirm is enabled, we can redirect to app directly
+        if (data.session) {
+          navigate('/app');
+        } else {
+          navigate('/login');
+        }
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
