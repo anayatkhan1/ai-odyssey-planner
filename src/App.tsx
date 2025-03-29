@@ -9,9 +9,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import AppDashboard from "./pages/App";
+import Auth from "./pages/Auth";
+import Travel from "./pages/Travel";
 
 // AnimationWrapper component
 const AnimationWrapper = () => {
@@ -21,9 +20,8 @@ const AnimationWrapper = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Index />} />
-        <Route path="/app" element={<ProtectedRoute><AppDashboard /></ProtectedRoute>} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/travel" element={<ProtectedRoute><Travel /></ProtectedRoute>} />
+        <Route path="/auth" element={<Auth />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
