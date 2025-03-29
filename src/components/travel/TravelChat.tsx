@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { MessageCircle, Send, X } from 'lucide-react';
+import { MessageCircle, Send, X, Loader2, Plus, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 type Message = {
   id?: string;
@@ -24,6 +26,7 @@ const TravelChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   
   useEffect(() => {
     const storedSessionId = localStorage.getItem('travelChatSessionId');
@@ -40,6 +43,15 @@ const TravelChat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Focus input when chat opens
+  useEffect(() => {
+    if (isChatOpen && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 300);
+    }
+  }, [isChatOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -140,95 +152,176 @@ const TravelChat = () => {
     });
   };
 
+  const quickPrompts = [
+    "What are the best places to visit in Europe?",
+    "Recommend budget-friendly destinations",
+    "Tips for solo traveling",
+    "Must-visit landmarks in Asia"
+  ];
+
+  const handleQuickPrompt = (prompt: string) => {
+    setInput(prompt);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50">
+      <motion.div 
+        className="fixed bottom-6 right-6 z-50"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
         <Button
           onClick={() => setIsChatOpen(!isChatOpen)}
-          className="h-14 w-14 rounded-full bg-travel-blue text-white shadow-lg hover:bg-travel-blue/90"
-        >
-          {isChatOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <MessageCircle className="h-6 w-6" />
+          className={cn(
+            "h-14 w-14 rounded-full shadow-lg transition-all duration-300",
+            isChatOpen 
+              ? "bg-red-500 hover:bg-red-600" 
+              : "bg-travel-blue hover:bg-travel-blue/90"
           )}
+        >
+          <AnimatePresence mode="wait">
+            {isChatOpen ? (
+              <motion.div
+                key="close"
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <X className="h-6 w-6" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="open"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <MessageCircle className="h-6 w-6" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Button>
-      </div>
+      </motion.div>
       
       <AnimatePresence>
         {isChatOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 25 
+            }}
             className="fixed bottom-24 right-6 z-50 w-full max-w-md"
           >
-            <Card className="flex h-[500px] max-h-[80vh] flex-col overflow-hidden border-3 border-black shadow-neo">
-              <div className="flex items-center justify-between border-b p-3">
+            <Card className="flex h-[500px] max-h-[80vh] flex-col overflow-hidden border-3 border-black shadow-neo bg-white">
+              <div className="flex items-center justify-between border-b p-3 bg-travel-blue/10">
                 <div className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-travel-blue" />
-                  <h3 className="font-archivo text-lg font-bold">Travel Assistant</h3>
+                  <div className="bg-travel-blue rounded-full p-1">
+                    <Sparkles className="h-4 w-4 text-white" />
+                  </div>
+                  <h3 className="font-archivo text-lg font-bold text-travel-blue">Travel Assistant</h3>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={startNewChat}
-                  className="text-xs"
+                  className="text-xs hover:bg-travel-blue/10"
                 >
+                  <Plus className="h-3 w-3 mr-1" />
                   New Chat
                 </Button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50">
                 {messages.length === 0 ? (
-                  <div className="flex h-full flex-col items-center justify-center text-center text-gray-500">
-                    <MessageCircle className="mb-2 h-12 w-12 text-gray-300" />
-                    <h3 className="text-lg font-semibold">Travel Assistant</h3>
-                    <p className="mt-2 max-w-xs text-sm">
+                  <div className="flex h-full flex-col items-center justify-center text-center p-6">
+                    <div className="bg-travel-blue/10 rounded-full p-4 mb-4">
+                      <MessageCircle className="h-10 w-10 text-travel-blue" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-travel-blue mb-2">Travel Assistant</h3>
+                    <p className="text-gray-600 mb-8 max-w-xs">
                       Ask me anything about travel destinations, planning tips, or local recommendations!
                     </p>
+                    
+                    <div className="w-full space-y-2">
+                      <p className="text-sm text-gray-500 font-medium">Try asking:</p>
+                      {quickPrompts.map((prompt, index) => (
+                        <motion.button
+                          key={index}
+                          onClick={() => handleQuickPrompt(prompt)}
+                          className="w-full text-left px-4 py-2 rounded-lg border border-gray-200 bg-white 
+                                    hover:bg-travel-blue/5 hover:border-travel-blue/30 transition-colors 
+                                    text-gray-700 text-sm"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {prompt}
+                        </motion.button>
+                      ))}
+                    </div>
                   </div>
                 ) : (
-                  messages.map((msg, index) => (
-                    <div
-                      key={index}
-                      className={`mb-4 ${
-                        msg.role === 'user' ? 'ml-auto max-w-[80%]' : 'mr-auto max-w-[80%]'
-                      }`}
-                    >
-                      <div
-                        className={`rounded-lg p-3 ${
-                          msg.role === 'user'
-                            ? 'bg-travel-blue text-white'
-                            : msg.role === 'system'
-                            ? 'bg-gray-200 text-gray-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
+                  <div className="space-y-4">
+                    {messages.map((msg, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className={cn(
+                          "flex",
+                          msg.role === 'user' ? 'justify-end' : 'justify-start'
+                        )}
                       >
-                        <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
-                      </div>
-                    </div>
-                  ))
+                        <div
+                          className={cn(
+                            "max-w-[80%] rounded-2xl px-4 py-3",
+                            msg.role === 'user' 
+                              ? 'bg-travel-blue text-white rounded-tr-none' 
+                              : msg.role === 'system'
+                                ? 'bg-gray-200 text-gray-800 rounded-tl-none'
+                                : 'bg-gray-100 text-gray-800 border border-gray-200 rounded-tl-none'
+                          )}
+                        >
+                          <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
               
-              <div className="border-t p-3">
+              <div className="border-t p-3 bg-white">
                 <div className="flex gap-2">
                   <Textarea
+                    ref={inputRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Ask about travel destinations..."
-                    className="min-h-[50px] resize-none"
+                    className="min-h-[50px] resize-none focus-visible:ring-travel-blue/50 rounded-lg"
                     disabled={isLoading}
                   />
                   <Button
                     onClick={handleSendMessage}
                     disabled={!input.trim() || isLoading}
-                    className="h-[50px] min-w-[50px] bg-travel-blue hover:bg-travel-blue/90"
+                    className="h-[50px] min-w-[50px] bg-travel-blue hover:bg-travel-blue/90 transition-colors rounded-lg"
                   >
-                    <Send className="h-5 w-5" />
+                    {isLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
                   </Button>
                 </div>
               </div>
