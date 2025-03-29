@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { DestinationType } from '@/pages/Travel';
-import { Sparkles, Database, Trash, RefreshCw, AlertCircle } from 'lucide-react';
+import { Sparkles, Database, Trash, RefreshCw, AlertCircle, Check } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 
 const TravelDataGenerator = () => {
   const { toast } = useToast();
@@ -17,6 +18,7 @@ const TravelDataGenerator = () => {
   const [statusMessage, setStatusMessage] = useState('');
   const [docsCount, setDocsCount] = useState(0);
   const [embedsCount, setEmbedsCount] = useState(0);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   // Check database status when component mounts
   useEffect(() => {
@@ -44,6 +46,7 @@ const TravelDataGenerator = () => {
       
       setDocsCount(totalDocs || 0);
       setEmbedsCount(embedsCount || 0);
+      setLastChecked(new Date());
       
       if (totalDocs === 0) {
         setStatus('idle');
@@ -81,6 +84,124 @@ The visa requirement is: ${destination.visaRequirement}.
 `.trim();
   };
 
+  const generateRealTravelDestinations = (): DestinationType[] => {
+    const destinations: DestinationType[] = [
+      {
+        id: "1",
+        name: "Bali, Indonesia",
+        description: "Tropical paradise with beautiful beaches, rich culture, and spiritual temples surrounded by lush rice terraces.",
+        image: "https://example.com/bali.jpg",
+        budget: "Medium",
+        duration: "1 Week+",
+        locationType: "Beach",
+        activities: ["Adventure", "Relaxation", "Cultural"],
+        season: "All Year",
+        visaRequirement: "Visa on Arrival",
+        location: { lat: -8.4095, lng: 115.1889 },
+        popularity: 95,
+      },
+      {
+        id: "2",
+        name: "Kyoto, Japan",
+        description: "Ancient capital with thousands of classical Buddhist temples, gardens, imperial palaces, and traditional wooden houses.",
+        image: "https://example.com/kyoto.jpg",
+        budget: "High",
+        duration: "1 Week+",
+        locationType: "City",
+        activities: ["Cultural", "Family-Friendly"],
+        season: "Spring",
+        visaRequirement: "Requires Visa",
+        location: { lat: 35.0116, lng: 135.7681 },
+        popularity: 89,
+      },
+      {
+        id: "3",
+        name: "Santorini, Greece",
+        description: "Stunning island with white-washed buildings, blue-domed churches overlooking the Aegean Sea and famous sunsets.",
+        image: "https://example.com/santorini.jpg",
+        budget: "Luxury",
+        duration: "3-5 Days",
+        locationType: "Beach",
+        activities: ["Relaxation", "Cultural"],
+        season: "Summer",
+        visaRequirement: "Visa-Free",
+        location: { lat: 36.3932, lng: 25.4615 },
+        popularity: 92,
+      },
+      {
+        id: "4",
+        name: "Machu Picchu, Peru",
+        description: "Ancient Incan citadel set high in the Andes Mountains, featuring amazing stone architecture and breathtaking views.",
+        image: "https://example.com/machupicchu.jpg",
+        budget: "Medium",
+        duration: "3-5 Days",
+        locationType: "Mountain",
+        activities: ["Adventure", "Cultural"],
+        season: "Winter",
+        visaRequirement: "Visa-Free",
+        location: { lat: -13.1631, lng: -72.5450 },
+        popularity: 88,
+      },
+      {
+        id: "5",
+        name: "Barcelona, Spain",
+        description: "Vibrant city with stunning architecture by Gaudi, Mediterranean beaches, and world-class dining and nightlife.",
+        image: "https://example.com/barcelona.jpg",
+        budget: "Medium",
+        duration: "3-5 Days",
+        locationType: "City",
+        activities: ["Cultural", "Family-Friendly"],
+        season: "All Year",
+        visaRequirement: "Visa-Free",
+        location: { lat: 41.3851, lng: 2.1734 },
+        popularity: 90,
+      }
+    ];
+    
+    // Create 45 more destinations to reach a total of 50
+    const locationTypes = ["Beach", "Mountain", "City", "Rural"];
+    const seasons = ["Summer", "Winter", "Spring", "Fall", "All Year"];
+    const budgets = ["Low", "Medium", "High", "Luxury"];
+    const durations = ["Weekend", "3-5 Days", "1 Week+"];
+    const visaRequirements = ["Visa-Free", "Visa on Arrival", "Requires Visa"];
+    const activityOptions = ["Adventure", "Relaxation", "Cultural", "Family-Friendly"];
+    
+    const countries = [
+      "France", "Italy", "United States", "Thailand", "Australia", "New Zealand", "Canada", 
+      "Mexico", "Brazil", "Argentina", "South Africa", "Egypt", "Morocco", "Kenya", "India", 
+      "China", "Russia", "United Kingdom", "Germany", "Portugal", "Croatia", "Vietnam", 
+      "Cambodia", "Malaysia", "Philippines", "Switzerland", "Iceland", "Norway", "Sweden", 
+      "Finland", "Turkey", "UAE", "Singapore", "Costa Rica", "Colombia", "Chile", "Ecuador", 
+      "Peru", "Bolivia", "Nepal", "Tanzania", "Ireland", "Scotland", "Austria", "Czech Republic"
+    ];
+    
+    for (let i = 6; i <= 50; i++) {
+      const countryIndex = i - 6;
+      const country = countries[countryIndex];
+      
+      // Generate more realistic destination data
+      destinations.push({
+        id: i.toString(),
+        name: `${["Amazing", "Beautiful", "Stunning", "Charming", "Historic"][Math.floor(Math.random() * 5)]} ${country}`,
+        description: `${country} offers ${["breathtaking landscapes", "rich cultural experiences", "wonderful cuisine", "historic sites", "unforgettable adventures"][Math.floor(Math.random() * 5)]} and ${["friendly locals", "perfect weather", "unique traditions", "amazing wildlife", "architectural wonders"][Math.floor(Math.random() * 5)]}.`,
+        image: `https://example.com/image${i}.jpg`,
+        budget: budgets[Math.floor(Math.random() * budgets.length)] as any,
+        duration: durations[Math.floor(Math.random() * durations.length)] as any,
+        locationType: locationTypes[Math.floor(Math.random() * locationTypes.length)] as any,
+        activities: [activityOptions[Math.floor(Math.random() * activityOptions.length)]] as any,
+        season: seasons[Math.floor(Math.random() * seasons.length)] as any,
+        visaRequirement: visaRequirements[Math.floor(Math.random() * visaRequirements.length)] as any,
+        location: {
+          lat: (Math.random() * 180 - 90),
+          lng: (Math.random() * 360 - 180),
+        },
+        popularity: Math.floor(Math.random() * 100),
+      });
+    }
+    
+    return destinations;
+  };
+
   const populateDatabase = async () => {
     setIsLoading(true);
     setProgress(0);
@@ -103,52 +224,47 @@ The visa requirement is: ${destination.visaRequirement}.
       }
       
       // Get all destinations for seeding
-      const mockedDestinations: DestinationType[] = [];
-      
-      // Create random destinations
-      for (let i = 1; i <= 50; i++) {
-        mockedDestinations.push({
-          id: i.toString(),
-          name: `Destination ${i}`,
-          description: `${['Beautiful', 'Amazing', 'Scenic', 'Historic', 'Cultural'][Math.floor(Math.random() * 5)]} destination with ${['beaches', 'mountains', 'forests', 'museums', 'nightlife'][Math.floor(Math.random() * 5)]} and ${['great food', 'friendly locals', 'affordable accommodations', 'luxury resorts', 'outdoor adventures'][Math.floor(Math.random() * 5)]}.`,
-          image: `https://example.com/image${i}.jpg`,
-          budget: ['Low', 'Medium', 'High', 'Luxury'][Math.floor(Math.random() * 4)] as any,
-          duration: ['Weekend', '3-5 Days', '1 Week+'][Math.floor(Math.random() * 3)] as any,
-          locationType: ['Beach', 'Mountain', 'City', 'Rural'][Math.floor(Math.random() * 4)] as any,
-          activities: [['Adventure', 'Relaxation', 'Cultural', 'Family-Friendly'][Math.floor(Math.random() * 4)]] as any,
-          season: ['Summer', 'Winter', 'Spring', 'Fall', 'All Year'][Math.floor(Math.random() * 5)] as any,
-          visaRequirement: ['Visa-Free', 'Visa on Arrival', 'Requires Visa'][Math.floor(Math.random() * 3)] as any,
-          location: {
-            lat: Math.random() * 180 - 90,
-            lng: Math.random() * 360 - 180,
-          },
-          popularity: Math.floor(Math.random() * 100),
-        });
-      }
+      const destinations = generateRealTravelDestinations();
       
       // For each destination, create a document
-      for (let i = 0; i < mockedDestinations.length; i++) {
-        const destination = mockedDestinations[i];
+      const insertPromises = [];
+      for (let i = 0; i < destinations.length; i++) {
+        const destination = destinations[i];
         const content = generateDestinationDocument(destination);
         
         // Insert into travel_documents (without embedding for now)
-        const { error } = await supabase.from('travel_documents').insert({
+        const promise = supabase.from('travel_documents').insert({
           destination_id: destination.id,
           destination_name: destination.name,
           content: content,
           // Embeddings will be added later
         });
         
-        if (error) throw error;
+        insertPromises.push(promise);
         
-        // Update progress
-        setProgress(Math.floor(((i + 1) / mockedDestinations.length) * 100));
+        // Update progress every 5 destinations
+        if (i % 5 === 0 || i === destinations.length - 1) {
+          setProgress(Math.floor(((i + 1) / destinations.length) * 100));
+        }
       }
       
-      toast({
-        title: "Success!",
-        description: `Created ${mockedDestinations.length} travel documents in the database.`,
-      });
+      // Wait for all inserts to complete
+      const results = await Promise.all(insertPromises);
+      const errors = results.filter(r => r.error);
+      
+      if (errors.length > 0) {
+        console.error("Some inserts failed:", errors);
+        toast({
+          title: "Partial Success",
+          description: `Created some travel documents but encountered ${errors.length} errors.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: `Created ${destinations.length} travel documents in the database.`,
+        });
+      }
 
       // Update status
       await checkDatabaseStatus();
@@ -195,38 +311,55 @@ The visa requirement is: ${destination.visaRequirement}.
       let failCount = 0;
       
       // For each document, call the edge function to generate embeddings
-      for (let i = 0; i < data.length; i++) {
-        const document = data[i];
+      // Process in batches of 5 to avoid overwhelming the API
+      const batchSize = 1; // Process one at a time to reduce load
+      for (let i = 0; i < data.length; i += batchSize) {
+        const batch = data.slice(i, i + batchSize);
         
-        try {
-          // Call edge function to generate embeddings
-          const { error: fnError, data: fnData } = await supabase.functions.invoke('travel-chat', {
-            body: {
-              action: 'generate_embedding',
-              document_id: document.id,
-              content: document.content
-            },
-          });
-          
-          if (fnError) {
-            console.error('Error generating embedding:', fnError);
+        for (const document of batch) {
+          try {
+            // Call edge function to generate embeddings
+            const { error: fnError, data: fnData } = await supabase.functions.invoke('travel-chat', {
+              body: {
+                action: 'generate_embedding',
+                document_id: document.id,
+                content: document.content
+              },
+            });
+            
+            if (fnError) {
+              console.error('Error generating embedding:', fnError);
+              failCount++;
+              continue; // Continue with other documents even if one fails
+            }
+            
+            if (fnData && fnData.success) {
+              successCount++;
+              
+              // Update toast every 5 successful generations
+              if (successCount % 5 === 0) {
+                toast({
+                  title: "Progress Update",
+                  description: `Generated ${successCount} embeddings so far...`,
+                });
+              }
+            } else {
+              console.error('Failed to generate embedding:', fnData?.error || 'Unknown error');
+              failCount++;
+            }
+          } catch (e) {
+            console.error('Exception generating embedding:', e);
             failCount++;
-            continue; // Continue with other documents even if one fails
           }
-          
-          if (fnData && fnData.success) {
-            successCount++;
-          } else {
-            console.error('Failed to generate embedding:', fnData?.error || 'Unknown error');
-            failCount++;
-          }
-        } catch (e) {
-          console.error('Exception generating embedding:', e);
-          failCount++;
         }
         
         // Update progress
-        setProgress(Math.floor(((i + 1) / data.length) * 100));
+        setProgress(Math.floor(((i + batchSize) / data.length) * 100));
+        
+        // Brief pause to not overwhelm the API
+        if (i + batchSize < data.length) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
       
       if (successCount > 0) {
@@ -282,6 +415,15 @@ The visa requirement is: ${destination.visaRequirement}.
     }
   };
 
+  const getStatusColor = () => {
+    switch (status) {
+      case 'ready': return 'bg-green-100 text-green-800 border-green-200';
+      case 'error': return 'bg-red-100 text-red-800 border-red-200';
+      case 'checking': return 'bg-blue-100 text-blue-800 border-blue-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   return (
     <Card className="mb-8 border-3 border-black shadow-neo">
       <CardHeader>
@@ -291,19 +433,32 @@ The visa requirement is: ${destination.visaRequirement}.
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {status !== 'idle' && (
-          <Alert variant={status === 'ready' ? 'default' : status === 'error' ? 'destructive' : 'default'}>
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>
-              {status === 'ready' ? 'System Ready' : 
-               status === 'error' ? 'Action Required' : 
-               'Checking Status'}
-            </AlertTitle>
-            <AlertDescription>
-              {statusMessage}
-            </AlertDescription>
-          </Alert>
-        )}
+        <div className={`p-4 rounded-md border ${getStatusColor()}`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {status === 'ready' ? (
+                <Check className="h-5 w-5 text-green-600" />
+              ) : status === 'error' ? (
+                <AlertCircle className="h-5 w-5 text-red-600" />
+              ) : (
+                <RefreshCw className="h-5 w-5 text-blue-600 animate-spin" />
+              )}
+              <h3 className="font-medium">
+                {status === 'ready' ? 'System Ready' : 
+                 status === 'error' ? 'Action Required' : 
+                 'Checking Status'}
+              </h3>
+            </div>
+            {lastChecked && (
+              <span className="text-xs text-gray-500">
+                Last checked: {lastChecked.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+          <p className="text-sm">
+            {statusMessage}
+          </p>
+        </div>
         
         <p className="text-sm text-gray-600">
           Use these tools to populate the travel documents database for RAG system testing.
@@ -338,20 +493,25 @@ The visa requirement is: ${destination.visaRequirement}.
             <Trash className="h-4 w-4" />
             Clear Database
           </Button>
+          
+          <Button
+            onClick={checkDatabaseStatus}
+            variant="outline"
+            disabled={isLoading || isGeneratingEmbeddings}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh Status
+          </Button>
         </div>
         
-        {(progress > 0 && progress < 100) && (
+        {(progress > 0) && (
           <div className="w-full">
             <div className="mb-2 text-xs text-gray-600 flex justify-between">
               <span>{isGeneratingEmbeddings ? 'Generating embeddings...' : 'Creating documents...'}</span>
               <span>{progress}% complete</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-              <div
-                className="h-full bg-travel-blue transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+            <Progress value={progress} className="h-2" />
           </div>
         )}
         

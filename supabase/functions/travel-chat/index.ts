@@ -14,13 +14,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Get embeddings using Anthropic's API - improved for better error handling
+// Get embeddings using Anthropic's API with improved error handling
 async function getEmbeddings(text: string) {
   try {
-    console.log("Getting embeddings for text:", text.slice(0, 30) + "...");
+    console.log(`Getting embeddings for: "${text.slice(0, 50)}..."`);
     
-    if (!anthropicApiKey) {
-      console.error("Anthropic API key is not configured");
+    if (!anthropicApiKey || anthropicApiKey.trim() === '') {
       throw new Error("Anthropic API key is not configured");
     }
     
@@ -40,28 +39,33 @@ async function getEmbeddings(text: string) {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error(`Anthropic Embeddings API error (${response.status}):`, errorData);
-      throw new Error(`Anthropic Embeddings API returned ${response.status}: ${errorData}`);
+      console.error(`Anthropic API error (${response.status}):`, errorData);
+      throw new Error(`Anthropic API returned ${response.status}: ${errorData}`);
     }
 
     const data = await response.json();
+    console.log("Successfully generated embedding");
     return data.embedding;
   } catch (error) {
     console.error('Error getting embeddings:', error);
-    return null;
+    throw error; // Re-throw to allow proper handling upstream
   }
 }
 
-// Function to generate and store embeddings for a document
+// Function to generate and store embeddings for a document with better error handling
 async function generateEmbeddingForDocument(documentId: string, content: string) {
   try {
     console.log(`Generating embedding for document ID: ${documentId}`);
     
+    if (!content || content.trim() === '') {
+      throw new Error("Empty content provided for embedding generation");
+    }
+    
     // Get embedding from Anthropic
     const embedding = await getEmbeddings(content);
     
-    if (!embedding) {
-      throw new Error("Failed to generate embedding");
+    if (!embedding || !Array.isArray(embedding)) {
+      throw new Error("Failed to generate valid embedding");
     }
     
     // Update the document with the embedding
@@ -71,13 +75,19 @@ async function generateEmbeddingForDocument(documentId: string, content: string)
       .eq('id', documentId);
     
     if (error) {
+      console.error("Database update error:", error);
       throw error;
     }
     
+    console.log(`Successfully updated document ${documentId} with embedding`);
     return { success: true };
   } catch (error) {
     console.error('Error generating embedding for document:', error);
-    return { success: false, error: error.message };
+    return { 
+      success: false, 
+      error: error.message || "Unknown error in embedding generation",
+      details: error
+    };
   }
 }
 
@@ -150,6 +160,38 @@ serve(async (req) => {
       const result = await generateEmbeddingForDocument(document_id, content);
       
       return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Handle batch embedding generation
+    if (reqData.action === 'batch_generate_embeddings') {
+      const { document_ids } = reqData;
+      
+      if (!document_ids || !Array.isArray(document_ids) || document_ids.length === 0) {
+        throw new Error("Missing or invalid document_ids parameter");
+      }
+      
+      const results = [];
+      for (const docId of document_ids) {
+        // Get document content
+        const { data: document, error: fetchError } = await supabase
+          .from('travel_documents')
+          .select('content')
+          .eq('id', docId)
+          .single();
+          
+        if (fetchError || !document) {
+          results.push({ id: docId, success: false, error: fetchError?.message || "Document not found" });
+          continue;
+        }
+        
+        // Generate embedding
+        const result = await generateEmbeddingForDocument(docId, document.content);
+        results.push({ id: docId, ...result });
+      }
+      
+      return new Response(JSON.stringify({ results }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
