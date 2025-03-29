@@ -3,8 +3,6 @@ import React from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { CheckIcon, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { FilterType } from '@/pages/Travel';
 
 interface TravelFiltersProps {
@@ -102,7 +100,7 @@ const FilterSection = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                className={`px-3 py-1 border rounded-full text-sm transition-all ${
+                className={`px-3 py-1 border rounded-full text-sm transition-all hover:text-black ${
                   isSelected 
                     ? `${colorClass} border-2` 
                     : 'bg-white text-gray-600 hover:bg-gray-100 hover:text-black'
@@ -189,7 +187,7 @@ const TravelFilters: React.FC<TravelFiltersProps> = ({ filters, setFilters }) =>
       
       {/* Clear Filters Button - Fixed to include all required FilterType properties */}
       <Button 
-        className="w-full mt-4 bg-white text-travel-blue border-2 border-travel-blue hover:bg-travel-blue hover:text-white hover:text-black"
+        className="w-full mt-4 bg-white text-travel-blue border-2 border-travel-blue hover:bg-travel-blue hover:text-black"
         onClick={() => setFilters({
           search: '',
           budget: [],

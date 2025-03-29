@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 interface DestinationCardProps {
   destination: DestinationType;
   isSaved: boolean;
-  onToggleSave: () => void;
+  onToggleSave: (e: React.MouseEvent) => void;
 }
 
 const DestinationCard: React.FC<DestinationCardProps> = ({ 
@@ -64,13 +64,19 @@ const DestinationCard: React.FC<DestinationCardProps> = ({
             src={destination.image} 
             alt={destination.name} 
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            onError={(e) => {
+              // Fallback image if the original one fails to load
+              const target = e.target as HTMLImageElement;
+              target.src = 'https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&fit=crop&w=800';
+              target.onerror = null; // Prevent infinite fallback loop
+            }}
           />
           <Button
             variant="outline"
             size="icon"
             className={`absolute top-3 right-3 rounded-full bg-white border-2 border-black ${
               isSaved ? 'text-travel-orange' : 'text-gray-500'
-            }`}
+            } hover:text-black`}
             onClick={onToggleSave}
           >
             <Bookmark 
