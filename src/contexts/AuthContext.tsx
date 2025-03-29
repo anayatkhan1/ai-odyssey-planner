@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 type AuthContextType = {
   isLoading: boolean;
@@ -21,7 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log("Setting up auth state listener");
     
-    // Handle auth state changes
+    // Handle auth state changes, including redirect results
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
@@ -31,17 +30,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
         
-        // Log the auth state change
+        // Log the auth state change to help with debugging
         console.log("Auth session changed:", {
           event,
           session: currentSession ? "present" : "not present",
           pathname: window.location.pathname
         });
         
-        // If signed in, redirect to /travel route
-        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && currentSession) {
-          console.log("User authenticated, redirecting to /travel");
-          window.location.href = '/travel';
+        // If we get a SIGNED_IN or INITIAL_SESSION with a user while on the login page, redirect to /app
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && 
+            currentSession && 
+            window.location.pathname.includes('/login')) {
+          console.log("Auth detected authenticated session while on login page, redirecting to /app");
+          
+          // Use timeout to ensure state is updated before redirect
+          setTimeout(() => {
+            window.location.href = '/app';
+          }, 300);
         }
       }
     );
@@ -61,10 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(data.session);
         setUser(data.session?.user ?? null);
         
-        // If we have a session, redirect to /travel
-        if (data.session) {
-          console.log("Found existing session, redirecting to /travel");
-          window.location.href = '/travel';
+        // If we have a session and we're on the login page, redirect to /app
+        if (data.session && window.location.pathname.includes('/login')) {
+          console.log("Found existing session while on login page, redirecting to /app");
+          
+          // Use timeout to ensure state is updated before redirect
+          setTimeout(() => {
+            window.location.href = '/app';
+          }, 300);
         }
       } catch (err) {
         console.error("Error initializing auth:", err);
