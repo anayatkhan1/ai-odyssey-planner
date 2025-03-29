@@ -24,51 +24,56 @@ const LoginPage = () => {
   // Redirect to /app if already logged in
   useEffect(() => {
     if (user) {
+      console.log("User already logged in, redirecting to /app");
       navigate('/app');
     }
   }, [user, navigate]);
 
-  // Check if we have a hash in the URL (OAuth callback)
+  // Enhanced callback handling
   useEffect(() => {
-    const handleHashRedirect = async () => {
-      // Extract hash and query parameters
-      const hash = window.location.hash;
-      const query = window.location.search;
-      
-      // Check if we have a hash or auth callback
-      if (hash.includes('access_token=') || query.includes('callback=auth')) {
-        console.log("Detected auth callback or token in URL");
+    const handleAuthCallback = async () => {
+      // Check for auth callback in URL
+      if (location.search.includes('callback=auth') || location.hash.includes('access_token=')) {
+        console.log("Detected auth callback in URL");
         
-        // Get the session
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (data.session) {
-          console.log("Session found, redirecting to /app");
-          // Clear the hash from the URL
-          if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, document.title, window.location.pathname);
+        try {
+          // Get the session
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            throw error;
           }
           
+          if (data.session) {
+            console.log("Session found after callback, redirecting to /app");
+            
+            // Show success message
+            toast({
+              title: "Success",
+              description: "You have been logged in successfully",
+            });
+            
+            // Clear the hash and query from the URL
+            if (window.history && window.history.replaceState) {
+              window.history.replaceState(null, document.title, window.location.pathname);
+            }
+            
+            // Redirect to app dashboard
+            navigate('/app');
+          }
+        } catch (error: any) {
+          console.error("Error handling auth callback:", error);
           toast({
-            title: "Success",
-            description: "You have been logged in successfully",
-          });
-          
-          // Redirect to protected route
-          navigate('/app');
-        } else if (error) {
-          console.error("Session error:", error);
-          toast({
-            title: "Error",
-            description: error.message || "An error occurred during authentication",
+            title: "Authentication Error",
+            description: error.message || "There was a problem with authentication",
             variant: "destructive"
           });
         }
       }
     };
     
-    handleHashRedirect();
-  }, [navigate, toast]);
+    handleAuthCallback();
+  }, [location, navigate, toast]);
 
   const handleEmailSignIn = async (e: FormEvent) => {
     e.preventDefault();
@@ -91,11 +96,11 @@ const LoginPage = () => {
       if (error) throw error;
       
       if (data.session) {
-        navigate('/app');
         toast({
           title: "Success",
           description: "You have been logged in successfully",
         });
+        navigate('/app');
       }
     } catch (error: any) {
       toast({

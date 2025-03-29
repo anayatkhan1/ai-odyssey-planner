@@ -35,18 +35,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log("Initial session check:", currentSession?.user?.email);
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setIsLoading(false);
-    });
+    const initializeAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          throw error;
+        }
+        
+        console.log("Initial session check:", data.session?.user?.email);
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+      } catch (err) {
+        console.error("Error initializing auth:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+      throw error;
+    }
   };
 
   const value = {
