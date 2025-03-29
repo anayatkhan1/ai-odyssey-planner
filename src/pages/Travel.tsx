@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import TravelFilters from '@/components/travel/TravelFilters';
 import DestinationCard from '@/components/travel/DestinationCard';
 import DestinationMap from '@/components/travel/DestinationMap';
+import TravelChat from '@/components/travel/TravelChat';
 import { useAuth } from '@/contexts/AuthContext';
 import Footer from '@/components/Footer';
 import { 
@@ -1203,6 +1204,9 @@ const TravelPage = () => {
       
       {/* Footer */}
       <Footer />
+      
+      {/* TravelChat component added here */}
+      <TravelChat />
     </motion.div>
   );
 };

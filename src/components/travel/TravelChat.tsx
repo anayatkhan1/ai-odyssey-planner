@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { MessageCircle, Send, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,7 +18,6 @@ type Message = {
 
 const TravelChat = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [sessionId, setSessionId] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -27,7 +25,6 @@ const TravelChat = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Initialize session ID and load previous messages
   useEffect(() => {
     const storedSessionId = localStorage.getItem('travelChatSessionId');
     if (storedSessionId) {
@@ -40,7 +37,6 @@ const TravelChat = () => {
     }
   }, []);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -114,7 +110,6 @@ const TravelChat = () => {
         variant: "destructive",
       });
       
-      // Add error message to chat
       setMessages((msgs) => [
         ...msgs,
         {
@@ -147,7 +142,6 @@ const TravelChat = () => {
 
   return (
     <>
-      {/* Chat toggle button */}
       <div className="fixed bottom-6 right-6 z-50">
         <Button
           onClick={() => setIsChatOpen(!isChatOpen)}
@@ -161,7 +155,6 @@ const TravelChat = () => {
         </Button>
       </div>
       
-      {/* Chat panel */}
       <AnimatePresence>
         {isChatOpen && (
           <motion.div
@@ -171,7 +164,6 @@ const TravelChat = () => {
             className="fixed bottom-24 right-6 z-50 w-full max-w-md"
           >
             <Card className="flex h-[500px] max-h-[80vh] flex-col overflow-hidden border-3 border-black shadow-neo">
-              {/* Chat header */}
               <div className="flex items-center justify-between border-b p-3">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="h-5 w-5 text-travel-blue" />
@@ -187,7 +179,6 @@ const TravelChat = () => {
                 </Button>
               </div>
               
-              {/* Chat messages */}
               <div className="flex-1 overflow-y-auto p-4">
                 {messages.length === 0 ? (
                   <div className="flex h-full flex-col items-center justify-center text-center text-gray-500">
@@ -222,7 +213,6 @@ const TravelChat = () => {
                 <div ref={messagesEndRef} />
               </div>
               
-              {/* Input area */}
               <div className="border-t p-3">
                 <div className="flex gap-2">
                   <Textarea
