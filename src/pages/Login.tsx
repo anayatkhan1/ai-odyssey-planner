@@ -1,4 +1,3 @@
-
 import React, { useState, FormEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
@@ -29,39 +28,44 @@ const LoginPage = () => {
     }
   }, [user, navigate]);
 
-  // Handle OAuth callback and redirects
+  // Enhanced OAuth callback handling with more robust redirect
   useEffect(() => {
     const handleOAuthCallback = async () => {
       // Check if we're on a callback URL (after OAuth login)
-      if (location.hash.includes('access_token=') || location.search.includes('callback=auth')) {
-        console.log("OAuth callback detected, checking session and redirecting");
+      const isCallback = location.hash.includes('access_token=') || location.search.includes('callback=auth');
+      
+      if (isCallback) {
+        console.log("OAuth callback detected! Hash:", location.hash ? 'present' : 'absent', 
+                   "Search params:", location.search);
         
         try {
-          // Clear the URL hash first
+          // Clean the URL first - before any async operations
           if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, document.title, window.location.pathname);
+            window.history.replaceState(null, document.title, '/login');
           }
           
-          // Get the session to check if we're authenticated
+          // Get the current session
           const { data, error } = await supabase.auth.getSession();
           
           if (error) {
             throw error;
           }
           
+          console.log("Session check result:", data.session ? "Session found" : "No session");
+          
           if (data.session) {
-            console.log("Valid session found after OAuth callback");
+            console.log("Valid session found after OAuth callback - redirecting to /app");
             
             // Show success toast
             toast({
-              title: "Login Successful",
-              description: "Welcome back! You have been logged in successfully.",
+              title: "Login Successful!",
+              description: "Welcome back! You've been successfully logged in.",
             });
             
-            // Explicit redirect to app
-            setTimeout(() => {
-              navigate('/app', { replace: true });
-            }, 100);
+            // Ensure we're no longer on the login page after auth
+            // Use a forced navigation with replace to avoid back-button issues
+            window.location.href = '/app';
+            return; // Stop execution after redirect
           }
         } catch (error: any) {
           console.error("Error processing OAuth callback:", error);
@@ -74,9 +78,11 @@ const LoginPage = () => {
       }
     };
     
+    // Run the callback handler
     handleOAuthCallback();
   }, [location, navigate, toast]);
 
+  // Regular email sign in handler
   const handleEmailSignIn = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) {

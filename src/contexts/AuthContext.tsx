@@ -39,8 +39,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Log the auth state change to help with debugging
         console.log("Auth session changed:", {
           event,
-          session: currentSession
+          session: currentSession ? "present" : "not present"
         });
+        
+        // If we get a SIGNED_IN event and we're on the login page, redirect to /app
+        if (event === 'SIGNED_IN' && window.location.pathname === '/login') {
+          console.log("Auth detected SIGNED_IN event while on login page, redirecting to /app");
+          window.location.href = '/app';
+        }
       }
     );
 
@@ -55,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw error;
         }
         
-        console.log("Initial session check:", data.session?.user?.email);
+        console.log("Initial session check:", data.session?.user?.email || "No session");
         setSession(data.session);
         setUser(data.session?.user ?? null);
       } catch (err) {
