@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Globe, Instagram, Twitter, Facebook, Linkedin, Mail, MapPin, Phone, ArrowUpRight, ChevronUp } from "lucide-react";
+import { Globe, Twitter, Linkedin, Mail, MapPin, Phone, ArrowUpRight, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -60,14 +60,12 @@ const Footer = () => {
               AI-powered travel planning that understands you and creates personalized experiences.
             </p>
             
-            {/* Social icons */}
+            {/* Social icons - Updated as requested */}
             <div className="flex space-x-4 mb-6">
               {[
-                { icon: <Instagram size={20} />, color: "hover:bg-pink-500", url: "#" },
-                { icon: <Twitter size={20} />, color: "hover:bg-blue-400", url: "#" },
-                { icon: <Facebook size={20} />, color: "hover:bg-blue-600", url: "#" },
-                { icon: <Linkedin size={20} />, color: "hover:bg-blue-700", url: "#" },
-                { icon: <Mail size={20} />, color: "hover:bg-red-500", url: "#" },
+                { icon: <Twitter size={20} />, color: "hover:bg-blue-400", url: "https://x.com/anayatkhan09" },
+                { icon: <Linkedin size={20} />, color: "hover:bg-blue-700", url: "https://www.linkedin.com/in/anayatkhan/" },
+                { icon: <Mail size={20} />, color: "hover:bg-red-500", url: "mailto:anayat0khan@gmail.com" },
               ].map((social, index) => (
                 <a 
                   key={index} 
@@ -84,7 +82,7 @@ const Footer = () => {
               ))}
             </div>
             
-            {/* Contact info */}
+            {/* Contact info - Updated email */}
             <div className="space-y-3 font-space-grotesk">
               <div className="flex items-center space-x-3 text-sm text-gray-300 hover:text-white transition-colors">
                 <MapPin className="h-4 w-4 text-neo-yellow" />
@@ -96,7 +94,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3 text-sm text-gray-300 hover:text-white transition-colors">
                 <Mail className="h-4 w-4 text-neo-pink" />
-                <span>hello@voyagent.com</span>
+                <span>anayat0khan@gmail.com</span>
               </div>
             </div>
           </div>
@@ -204,13 +202,17 @@ const Footer = () => {
         </div>
         
         <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center relative z-10">
-          <div className="text-gray-400 text-sm mb-4 md:mb-0 font-space-mono flex items-center">
+          <div className="text-gray-400 text-sm mb-4 md:mb-0 font-space-mono flex flex-wrap items-center">
             <span className="bg-neo-blue/20 p-1 rounded-full mr-2">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-3 h-3">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
               </svg>
             </span>
-            © 2025 Voyagent. All rights reserved.
+            <span>© 2025 Voyagent. All rights reserved.</span>
+            <span className="mx-2 hidden md:inline">•</span>
+            <span className="flex items-center">
+              Built with <a href="https://anayat.xyz" className="text-neo-blue hover:text-neo-pink transition-colors mx-1 underline">Anayat</a>
+            </span>
           </div>
           
           <div className="flex space-x-6 font-space-grotesk relative">
