@@ -1,13 +1,11 @@
 
 import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/browser';
 
 // Initialize Sentry
 // Replace the DSN with your actual Sentry DSN
 export const initSentry = () => {
   Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN || '',
-    integrations: [new BrowserTracing()],
     
     // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring
     // Adjust this value in production
