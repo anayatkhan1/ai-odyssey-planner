@@ -22,14 +22,7 @@ export const initSentry = () => {
     // Add debug mode to see what's happening
     debug: true,
     
-    // Use more comprehensive integrations
-    integrations: [
-      new Sentry.Replay({
-        // Additional SDK configuration goes in here, for example:
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
+    // We've removed the Replay integration since it's not available in the current version
     
     // Adjust this based on your needs
     beforeSend(event) {
