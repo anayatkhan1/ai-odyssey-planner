@@ -2,7 +2,6 @@
 import * as Sentry from '@sentry/react';
 
 // Initialize Sentry
-// Replace the DSN with your actual Sentry DSN
 export const initSentry = () => {
   Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN || '',
