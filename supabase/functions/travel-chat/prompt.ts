@@ -1,3 +1,4 @@
+
 // Extract travel preferences from user messages
 export function extractTravelPreferences(chatHistory: any[]) {
   try {
