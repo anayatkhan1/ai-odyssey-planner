@@ -8,11 +8,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, X, Loader2, Plane, User, Bot, MapPin, Globe, Compass, ChevronRight } from 'lucide-react';
+import { 
+  MessageCircle, Send, X, Loader2, Plane, User, Bot, 
+  MapPin, Globe, Compass, ChevronRight, Calendar,
+  DollarSign, Users, SunSnow, Hotel, Map, Utensils 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Separator } from '@/components/ui/separator';
 
 type Message = {
   id?: string;
@@ -64,6 +69,38 @@ const ChatMessage = ({ message }: { message: Message }) => {
   );
 };
 
+// Travel Preference Card Component
+const TravelPreferenceCard = ({ icon, title, options, onSelect }: { 
+  icon: React.ReactNode, 
+  title: string, 
+  options: string[],
+  onSelect: (option: string) => void 
+}) => {
+  return (
+    <Card className="mb-3">
+      <CardContent className="p-4">
+        <div className="flex items-center mb-3">
+          <div className="mr-2 text-travel-blue">{icon}</div>
+          <h4 className="font-medium text-gray-700">{title}</h4>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {options.map((option) => (
+            <Button
+              key={option}
+              variant="outline"
+              size="sm"
+              onClick={() => onSelect(option)}
+              className="text-xs hover:bg-travel-blue hover:text-white"
+            >
+              {option}
+            </Button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 // Quick Prompt Component
 const QuickPrompt = ({ prompt, onClick }: { prompt: string, onClick: (prompt: string) => void }) => {
   return (
@@ -76,10 +113,13 @@ const QuickPrompt = ({ prompt, onClick }: { prompt: string, onClick: (prompt: st
       whileTap={{ scale: 0.98 }}
     >
       <div className="mr-3 text-travel-blue opacity-70 group-hover:opacity-100">
-        {prompt.includes("visit") ? <Globe className="h-4 w-4" /> : 
-         prompt.includes("budget") ? <Compass className="h-4 w-4" /> :
-         prompt.includes("solo") ? <User className="h-4 w-4" /> :
-         <MapPin className="h-4 w-4" />}
+        {prompt.includes("visit") || prompt.includes("destination") ? <Globe className="h-4 w-4" /> : 
+         prompt.includes("budget") ? <DollarSign className="h-4 w-4" /> :
+         prompt.includes("solo") || prompt.includes("family") ? <Users className="h-4 w-4" /> :
+         prompt.includes("itinerary") ? <Map className="h-4 w-4" /> :
+         prompt.includes("food") || prompt.includes("restaurants") ? <Utensils className="h-4 w-4" /> :
+         prompt.includes("hotel") || prompt.includes("stay") ? <Hotel className="h-4 w-4" /> :
+         <Compass className="h-4 w-4" />}
       </div>
       <span className="flex-1">{prompt}</span>
       <ChevronRight className="h-3 w-3 text-gray-400 group-hover:text-travel-blue transition-colors" />
@@ -88,9 +128,10 @@ const QuickPrompt = ({ prompt, onClick }: { prompt: string, onClick: (prompt: st
 };
 
 // Empty Chat State Component
-const EmptyChatState = ({ quickPrompts, handleQuickPrompt }: { 
+const EmptyChatState = ({ quickPrompts, handleQuickPrompt, handlePreferenceSelect }: { 
   quickPrompts: string[], 
-  handleQuickPrompt: (prompt: string) => void 
+  handleQuickPrompt: (prompt: string) => void,
+  handlePreferenceSelect: (category: string, option: string) => void
 }) => {
   return (
     <div className="flex h-full flex-col items-center justify-center text-center p-6">
@@ -104,23 +145,55 @@ const EmptyChatState = ({ quickPrompts, handleQuickPrompt }: {
       </motion.div>
       
       <h3 className="text-xl font-semibold text-travel-blue mb-2">Your Travel Assistant</h3>
-      <p className="text-gray-600 mb-8 max-w-sm">
-        Ask me anything about travel destinations, planning tips, or local recommendations!
+      <p className="text-gray-600 mb-6 max-w-sm">
+        Ask me anything about travel destinations, planning tips, or personalized recommendations!
       </p>
       
-      <div className="w-full space-y-3">
-        <div className="flex items-center space-x-2 mb-3">
-          <Badge variant="outline" className="bg-travel-blue/5 text-travel-blue border-travel-blue/20">Popular Questions</Badge>
-          <div className="h-px flex-1 bg-gray-200"></div>
+      <div className="w-full">
+        <div className="mb-6">
+          <div className="flex items-center space-x-2 mb-3">
+            <Badge variant="outline" className="bg-travel-blue/5 text-travel-blue border-travel-blue/20">Tell me your preferences</Badge>
+            <div className="h-px flex-1 bg-gray-200"></div>
+          </div>
+          
+          <TravelPreferenceCard 
+            icon={<DollarSign className="h-4 w-4" />}
+            title="Budget"
+            options={["Budget", "Mid-range", "Luxury"]}
+            onSelect={(option) => handlePreferenceSelect("budget", option)}
+          />
+          
+          <TravelPreferenceCard 
+            icon={<Users className="h-4 w-4" />}
+            title="Travel Companions"
+            options={["Solo", "Couple", "Family", "Friends"]}
+            onSelect={(option) => handlePreferenceSelect("companions", option)}
+          />
+          
+          <TravelPreferenceCard 
+            icon={<Compass className="h-4 w-4" />}
+            title="Interests"
+            options={["Nature", "Culture", "Food", "Adventure", "Relaxation", "Beaches", "Nightlife"]}
+            onSelect={(option) => handlePreferenceSelect("interests", option)}
+          />
         </div>
         
-        {quickPrompts.map((prompt, index) => (
-          <QuickPrompt 
-            key={index} 
-            prompt={prompt} 
-            onClick={handleQuickPrompt} 
-          />
-        ))}
+        <Separator className="my-6" />
+        
+        <div className="w-full space-y-3">
+          <div className="flex items-center space-x-2 mb-3">
+            <Badge variant="outline" className="bg-travel-blue/5 text-travel-blue border-travel-blue/20">Popular Questions</Badge>
+            <div className="h-px flex-1 bg-gray-200"></div>
+          </div>
+          
+          {quickPrompts.map((prompt, index) => (
+            <QuickPrompt 
+              key={index} 
+              prompt={prompt} 
+              onClick={handleQuickPrompt} 
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -299,11 +372,31 @@ const TravelChat = () => {
     });
   };
 
+  const handlePreferenceSelect = (category: string, option: string) => {
+    const preferenceMessages = {
+      budget: `I'm looking for ${option.toLowerCase()} options.`,
+      companions: `I'm traveling ${option.toLowerCase() === 'solo' ? 'alone' : `with ${option.toLowerCase()}`}.`,
+      interests: `I'm interested in ${option.toLowerCase()} activities.`
+    };
+    
+    setInput(prev => {
+      const newInput = prev ? `${prev} ${preferenceMessages[category]}` : preferenceMessages[category];
+      return newInput;
+    });
+    
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
   const quickPrompts = [
-    "What are the best places to visit in Europe?",
-    "Recommend budget-friendly destinations",
-    "Tips for solo traveling",
-    "Must-visit landmarks in Asia"
+    "What are the best destinations for a beach vacation?",
+    "Recommend budget-friendly places in Europe.",
+    "I'm planning a family trip to Asia, any suggestions?",
+    "Create a 3-day itinerary for Paris.",
+    "What are the best restaurants in Tokyo?",
+    "Tell me about visa requirements for Thailand.",
+    "Recommend hotels in Barcelona."
   ];
 
   const handleQuickPrompt = (prompt: string) => {
@@ -352,7 +445,8 @@ const TravelChat = () => {
         {messages.length === 0 ? (
           <EmptyChatState 
             quickPrompts={quickPrompts} 
-            handleQuickPrompt={handleQuickPrompt} 
+            handleQuickPrompt={handleQuickPrompt}
+            handlePreferenceSelect={handlePreferenceSelect}
           />
         ) : (
           <div className="space-y-1 p-1">
