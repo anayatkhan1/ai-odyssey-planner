@@ -168,15 +168,16 @@ export function isTravelRelated(query: string): { isTravelRelated: boolean; conf
   ];
   
   // If any non-travel topic is explicitly mentioned, reduce confidence
+  let adjustedConfidence = confidence;
   nonTravelTopics.forEach(topic => {
     if (normalizedQuery.includes(topic)) {
-      confidence = Math.max(confidence - 0.5, 0); // Reduce confidence significantly
+      adjustedConfidence = Math.max(adjustedConfidence - 0.5, 0); // Reduce confidence significantly
     }
   });
   
   return {
-    isTravelRelated: confidence > 0.2, // Threshold of 0.2 to determine if travel-related
-    confidence
+    isTravelRelated: adjustedConfidence > 0.2, // Threshold of 0.2 to determine if travel-related
+    confidence: adjustedConfidence
   };
 }
 
