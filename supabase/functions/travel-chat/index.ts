@@ -14,13 +14,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Validate if required environment variables are set
+function validateEnvVars() {
+  const missing = [];
+  if (!supabaseUrl || supabaseUrl.trim() === '') missing.push('SUPABASE_URL');
+  if (!supabaseServiceKey || supabaseServiceKey.trim() === '') missing.push('SUPABASE_SERVICE_ROLE_KEY');
+  if (!anthropicApiKey || anthropicApiKey.trim() === '') missing.push('ANTHROPIC_API_KEY');
+  
+  if (missing.length > 0) {
+    const message = `Missing required environment variables: ${missing.join(', ')}`;
+    console.error(message);
+    return { valid: false, message };
+  }
+  
+  return { valid: true };
+}
+
 // Get embeddings using Anthropic's API
 async function getEmbeddings(text: string) {
   try {
     console.log(`Getting embeddings for: "${text.slice(0, 50)}..."`);
     
-    if (!anthropicApiKey || anthropicApiKey.trim() === '') {
-      throw new Error("Anthropic API key is not configured");
+    const validation = validateEnvVars();
+    if (!validation.valid) {
+      throw new Error(validation.message);
     }
     
     const response = await fetch('https://api.anthropic.com/v1/embeddings', {
@@ -306,6 +323,12 @@ serve(async (req) => {
   }
 
   try {
+    // Validate environment variables
+    const validation = validateEnvVars();
+    if (!validation.valid) {
+      throw new Error(validation.message);
+    }
+    
     const reqData = await req.json();
     
     // Handle embedding generation
@@ -343,11 +366,7 @@ serve(async (req) => {
     
     if (!message || !sessionId) {
       throw new Error("Missing required parameters for chat");
-    }
-    
-    // Basic validation of API key
-    if (!anthropicApiKey) {
-      throw new Error("Anthropic API key is not configured");
+      
     }
     
     console.log(`Processing message for session ${sessionId}`);
@@ -379,7 +398,7 @@ serve(async (req) => {
 
     // Make API call to Claude with timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20-second timeout
     
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -429,6 +448,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (timeoutError) {
+      clearTimeout(timeoutId);
       console.error('Timeout or error calling Claude API:', timeoutError);
       throw new Error("Request to AI service timed out or failed. Please try again.");
     }
