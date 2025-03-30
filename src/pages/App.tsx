@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, Bell, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,8 +16,9 @@ const AppPage = () => {
     try {
       await signOut();
       toast({
-        title: "Success",
+        title: "Signed Out",
         description: "You have been logged out successfully",
+        variant: "success",
       });
       navigate('/');
     } catch (error) {
@@ -27,6 +28,42 @@ const AppPage = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const showToastVariants = () => {
+    // Show success toast
+    toast({
+      title: "Success",
+      description: "Your action was completed successfully",
+      variant: "success",
+    });
+    
+    // Show info toast after a delay
+    setTimeout(() => {
+      toast({
+        title: "Information",
+        description: "Here's some important information for you",
+        variant: "info",
+      });
+    }, 1000);
+    
+    // Show warning toast after a delay
+    setTimeout(() => {
+      toast({
+        title: "Warning",
+        description: "Please be careful with this action",
+        variant: "warning",
+      });
+    }, 2000);
+    
+    // Show error toast after a delay
+    setTimeout(() => {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again",
+        variant: "destructive",
+      });
+    }, 3000);
   };
 
   return (
@@ -78,8 +115,69 @@ const AppPage = () => {
             </div>
             
             <div className="bg-white p-6 rounded-xl border-3 border-black shadow-neo">
-              <h3 className="text-xl font-bold mb-3">Coming Soon</h3>
-              <p className="text-gray-600">New features will be added here.</p>
+              <h3 className="text-xl font-bold mb-3">Toast Notifications</h3>
+              <p className="text-gray-600 mb-4">Click below to see our enhanced toast notifications.</p>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  onClick={() => toast({
+                    title: "Success Message",
+                    description: "Your action was completed successfully",
+                    variant: "success",
+                  })}
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle size={16} />
+                  Success Toast
+                </Button>
+                
+                <Button 
+                  onClick={() => toast({
+                    title: "Error Message",
+                    description: "Something went wrong. Please try again",
+                    variant: "destructive",
+                  })}
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                >
+                  <AlertCircle size={16} />
+                  Error Toast
+                </Button>
+                
+                <Button 
+                  onClick={() => toast({
+                    title: "Info Message",
+                    description: "Here's some useful information for you",
+                    variant: "info",
+                  })}
+                  variant="outline"
+                  className="flex items-center gap-2 border-blue-400 text-blue-600 hover:bg-blue-50"
+                >
+                  <Info size={16} />
+                  Info Toast
+                </Button>
+                
+                <Button 
+                  onClick={() => toast({
+                    title: "Warning Message",
+                    description: "Please be careful with this action",
+                    variant: "warning",
+                  })}
+                  variant="outline"
+                  className="flex items-center gap-2 border-yellow-400 text-yellow-600 hover:bg-yellow-50"
+                >
+                  <AlertTriangle size={16} />
+                  Warning Toast
+                </Button>
+                
+                <Button 
+                  onClick={showToastVariants}
+                  className="col-span-2 bg-gradient-to-r from-neo-blue to-neo-green text-white flex items-center gap-2"
+                >
+                  <Bell size={16} />
+                  Show All Toast Variants
+                </Button>
+              </div>
             </div>
           </div>
         </div>
