@@ -20,6 +20,9 @@ const TravelChat = () => {
     messagesEndRef,
     inputRef,
     quickPrompts,
+    isApiKeyMissing,
+    isLastMessageOffTopic,
+    travelPromptSuggestions,
     setInput,
     setIsChatOpen,
     setIsFullscreen,
@@ -41,6 +44,8 @@ const TravelChat = () => {
       inputRef={inputRef}
       messagesEndRef={messagesEndRef}
       isFullscreen={isFullscreen}
+      isLastMessageOffTopic={isLastMessageOffTopic}
+      travelPromptSuggestions={travelPromptSuggestions}
       dismissError={dismissError}
       startNewChat={startNewChat}
       setIsFullscreen={setIsFullscreen}

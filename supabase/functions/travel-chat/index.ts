@@ -6,7 +6,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { corsHeaders, validateEnvVars } from "./utils.ts";
 import { generateEmbeddingForDocument, batchGenerateEmbeddings } from "./embedding.ts";
 import { getRelevantDocuments, getChatHistory, analyzeConversationContext } from "./retrieval.ts";
-import { generateSystemPrompt } from "./prompt.ts";
+import { generateSystemPrompt, isTravelRelated, getOffTopicResponse } from "./prompt.ts";
 
 // Environment variables
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -84,6 +84,51 @@ serve(async (req) => {
     }
     
     console.log(`Processing message for session ${sessionId}`);
+    
+    // First, check if the message is travel-related
+    const topicCheck = isTravelRelated(message);
+    console.log(`Topic check: Is travel related - ${topicCheck.isTravelRelated} (confidence: ${topicCheck.confidence.toFixed(2)})`);
+    
+    // If the message is not travel-related, return a polite but firm off-topic response
+    if (!topicCheck.isTravelRelated) {
+      console.log(`Off-topic message detected: "${message.slice(0, 30)}..."`);
+      
+      // Store user message
+      try {
+        await supabase.from('travel_chat_history').insert({
+          session_id: sessionId,
+          user_id: userId || null,
+          role: 'user',
+          content: message
+        });
+      } catch (error) {
+        console.error("Failed to store user message:", error);
+      }
+      
+      // Generate and store off-topic response
+      const offTopicResponse = getOffTopicResponse(message);
+      
+      try {
+        await supabase.from('travel_chat_history').insert({
+          session_id: sessionId,
+          user_id: userId || null,
+          role: 'assistant',
+          content: offTopicResponse
+        });
+      } catch (error) {
+        console.error("Failed to store off-topic response:", error);
+      }
+      
+      return new Response(JSON.stringify({ 
+        response: offTopicResponse,
+        sessionId,
+        isOffTopic: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // If we get here, the message is travel-related, so continue with normal processing
     
     // Store user message
     try {

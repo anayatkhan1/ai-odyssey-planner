@@ -1,4 +1,3 @@
-
 // Extract travel preferences from user messages
 export function extractTravelPreferences(chatHistory: any[]) {
   try {
@@ -112,6 +111,74 @@ function formatDocumentsForRAG(relevantDocs: any[], isFollowUp = false) {
   return ragContext;
 }
 
+// Check if a query is travel-related
+export function isTravelRelated(query: string): { isTravelRelated: boolean; confidence: number } {
+  // Convert to lowercase for case-insensitive matching
+  const normalizedQuery = query.toLowerCase();
+  
+  // List of travel-related keywords
+  const travelKeywords = [
+    'travel', 'trip', 'vacation', 'holiday', 'destination', 'tour', 'visit',
+    'flight', 'hotel', 'resort', 'beach', 'mountain', 'city', 'country',
+    'itinerary', 'guide', 'sightseeing', 'attraction', 'landmark', 'tourism',
+    'tourist', 'backpacking', 'cruise', 'journey', 'excursion', 'getaway',
+    'visa', 'passport', 'accommodation', 'lodging', 'stay', 'booking',
+    'reservation', 'adventure', 'explore', 'discover', 'location', 'place',
+    'recommendation', 'suggest', 'restaurant', 'food', 'cuisine', 'eat',
+    'activity', 'transportation', 'airport', 'train', 'bus', 'car rental',
+    'road trip', 'budget', 'cost', 'expense', 'cheap', 'expensive', 'luxury',
+    'family', 'solo', 'couple', 'group', 'weather', 'season', 'summer', 
+    'winter', 'spring', 'fall', 'autumn', 'packing', 'luggage', 'camping',
+    'hiking', 'swimming', 'diving', 'skiing', 'culture', 'language',
+    'local', 'native', 'festival', 'event', 'holiday', 'safety', 'safe',
+    'dangerous', 'insurance', 'travel insurance', 'currency', 'money',
+    'exchange', 'europe', 'asia', 'africa', 'north america', 'south america',
+    'australia', 'antarctica', 'island', 'tropical', 'mediterranean',
+    'nightlife', 'shopping', 'souvenir', 'photo', 'photography', 'view',
+    'scenic', 'relax', 'peaceful', 'historic', 'modern', 'weekend',
+    'week', 'month', 'day trip', 'checklist', 'tips', 'advice', 'planning'
+  ];
+  
+  // Count how many travel keywords are present in the query
+  let keywordMatches = 0;
+  travelKeywords.forEach(keyword => {
+    if (normalizedQuery.includes(keyword)) {
+      keywordMatches++;
+    }
+  });
+  
+  // Calculate a confidence score (0-1)
+  const confidence = Math.min(keywordMatches / 3, 1); // 3+ keywords = 100% confidence
+  
+  // Also check for explicit non-travel topics
+  const nonTravelTopics = [
+    'coding', 'programming', 'investment', 'stocks', 'crypto', 
+    'recipe', 'cooking', 'medicine', 'diagnosis', 'legal advice',
+    'lawsuit', 'divorce', 'marriage', 'dating', 'politics', 'election',
+    'president', 'prime minister', 'horror movie', 'movie script',
+    'write code', 'debug', 'fix my', 'solve this', 'math problem',
+    'calculate', 'prove', 'theorem', 'equation', 'molecular', 'chemistry',
+    'physics', 'quantum', 'artificial intelligence', 'machine learning',
+    'neural network', 'blockchain', 'database', 'SQL', 'javascript',
+    'python', 'java', 'c++', 'rust', 'golang', 'compiler', 'backend',
+    'frontend', 'fullstack', 'web development', 'app development',
+    'mobile app', 'operating system', 'linux', 'windows', 'macos',
+    'hack', 'exploit', 'vulnerability', 'cybersecurity', 'penetration testing'
+  ];
+  
+  // If any non-travel topic is explicitly mentioned, reduce confidence
+  nonTravelTopics.forEach(topic => {
+    if (normalizedQuery.includes(topic)) {
+      confidence = Math.max(confidence - 0.5, 0); // Reduce confidence significantly
+    }
+  });
+  
+  return {
+    isTravelRelated: confidence > 0.2, // Threshold of 0.2 to determine if travel-related
+    confidence
+  };
+}
+
 // Generate system prompt based on conversation context and travel documents
 export function generateSystemPrompt(relevantDocs: any[], chatHistory: any[], isFollowUp = false) {
   const preferences = extractTravelPreferences(chatHistory);
@@ -148,7 +215,25 @@ When responding to users:
 - If you don't know something, be honest about it
 - Focus on providing practical travel information
 - If the user hasn't specified preferences, tactfully ask questions to understand their travel needs better
-- Base your responses primarily on the travel information provided to you, and supplement with your general knowledge only when necessary`;
+- Base your responses primarily on the travel information provided to you, and supplement with your general knowledge only when necessary
+- IMPORTANT: You are ONLY designed to assist with travel-related questions. If users ask about non-travel topics, politely explain that you're a travel assistant and can only help with travel planning, destination recommendations, and travel advice. Then suggest they ask a travel-related question instead.`;
 
   return systemPrompt;
+}
+
+// Create a standardized off-topic response
+export function getOffTopicResponse(query: string): string {
+  return `I'm sorry, but I'm a travel assistant designed specifically to help with travel planning, destination recommendations, and travel advice. Your question about "${query.slice(0, 50)}${query.length > 50 ? '...' : ''}" appears to be outside my area of expertise.
+
+I'd be happy to assist you with:
+• Travel destination recommendations
+• Itinerary planning
+• Budget travel tips
+• Accommodation suggestions
+• Local attractions and activities
+• Transportation options
+• Travel safety information
+• Seasonal travel advice
+
+Please let me know if you have any travel-related questions!`;
 }

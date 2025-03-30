@@ -19,6 +19,7 @@ export const useTravelChat = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+  const [isLastMessageOffTopic, setIsLastMessageOffTopic] = useState(false);
   
   useEffect(() => {
     const storedSessionId = localStorage.getItem('travelChatSessionId');
@@ -121,6 +122,7 @@ export const useTravelChat = () => {
     setInput('');
     setIsLoading(true);
     setErrorMessage(null);
+    setIsLastMessageOffTopic(false);
     
     try {
       console.log("Sending message to travel-chat function:", userMessage.content);
@@ -145,6 +147,13 @@ export const useTravelChat = () => {
       
       if (!response.data.response) {
         throw new Error('No response received from assistant');
+      }
+      
+      // Check if response was for an off-topic question
+      if (response.data.isOffTopic) {
+        setIsLastMessageOffTopic(true);
+      } else {
+        setIsLastMessageOffTopic(false);
       }
       
       const botMessage = {
@@ -215,6 +224,7 @@ export const useTravelChat = () => {
     setMessages([]);
     setRetryCount(0);
     setErrorMessage(null);
+    setIsLastMessageOffTopic(false);
     toast({
       title: "New chat started",
       description: "Your previous chat history is still saved",
@@ -259,6 +269,15 @@ export const useTravelChat = () => {
     setErrorMessage(null);
   };
 
+  // Add sample travel-related prompts for user assistance if their question was off-topic
+  const travelPromptSuggestions = [
+    "What are popular beach destinations in Southeast Asia?",
+    "How much should I budget for a week in Paris?",
+    "What's the best time to visit Japan?",
+    "Can you suggest a 3-day itinerary for Rome?",
+    "What safety precautions should I take when traveling to South America?"
+  ];
+
   return {
     messages,
     input,
@@ -270,6 +289,8 @@ export const useTravelChat = () => {
     inputRef,
     quickPrompts,
     isApiKeyMissing,
+    isLastMessageOffTopic,
+    travelPromptSuggestions,
     setInput,
     setIsChatOpen,
     setIsFullscreen,

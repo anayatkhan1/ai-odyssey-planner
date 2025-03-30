@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import { X, Plane, Loader2, Send } from 'lucide-react';
+import { X, Plane, Loader2, Send, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,6 +18,8 @@ type ChatContentProps = {
   inputRef: React.RefObject<HTMLTextAreaElement>;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   isFullscreen: boolean;
+  isLastMessageOffTopic?: boolean;
+  travelPromptSuggestions?: string[];
   dismissError: () => void;
   startNewChat: () => void;
   setIsFullscreen: (isFullscreen: boolean) => void;
@@ -37,6 +39,8 @@ const ChatContent = ({
   inputRef,
   messagesEndRef,
   isFullscreen,
+  isLastMessageOffTopic = false,
+  travelPromptSuggestions = [],
   dismissError,
   startNewChat,
   setIsFullscreen,
@@ -89,6 +93,32 @@ const ChatContent = ({
             {messages.map((msg, index) => (
               <ChatMessage key={index} message={msg} />
             ))}
+            
+            {/* Off-topic suggestion prompts */}
+            {isLastMessageOffTopic && travelPromptSuggestions.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 my-3">
+                <div className="flex items-start gap-2 mb-2">
+                  <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-amber-800">
+                    Try asking me about travel instead. Here are some suggestions:
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {travelPromptSuggestions.map((prompt, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs bg-white border-amber-200 text-amber-800 hover:bg-amber-100"
+                      onClick={() => handleQuickPrompt(prompt)}
+                    >
+                      {prompt}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
         )}
