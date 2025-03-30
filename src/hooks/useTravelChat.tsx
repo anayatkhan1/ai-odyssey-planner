@@ -119,6 +119,7 @@ export const useTravelChat = () => {
       const botMessage = {
         role: 'assistant' as const,
         content: response.data.response,
+        sources: response.data.sources || []
       };
       
       setMessages((msgs) => [...msgs, botMessage]);

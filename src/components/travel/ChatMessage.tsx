@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Bot, User } from 'lucide-react';
+import { Bot, User, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type Message = {
@@ -9,6 +9,7 @@ export type Message = {
   role: 'user' | 'assistant' | 'system';
   content: string;
   createdAt?: string;
+  sources?: { name: string; similarity: number }[];
 };
 
 // Chat Message Component
@@ -43,6 +44,22 @@ const ChatMessage = ({ message }: { message: Message }) => {
         )}
       >
         <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+        
+        {!isUser && message.sources && message.sources.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-travel-blue/10 text-xs text-travel-blue/70">
+            <div className="flex items-center gap-1 mb-1">
+              <BookOpen className="h-3 w-3" />
+              <span>Sources:</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {message.sources.map((source, index) => (
+                <span key={index} className="inline-flex items-center bg-travel-blue/5 px-1.5 py-0.5 rounded">
+                  {source.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       
       {isUser && (

@@ -75,18 +75,49 @@ export function extractTravelPreferences(chatHistory: any[]) {
   }
 }
 
+// Format travel documents for RAG context
+function formatDocumentsForRAG(relevantDocs: any[], isFollowUp = false) {
+  if (!relevantDocs || relevantDocs.length === 0) {
+    return "I don't have specific information about this destination in my knowledge base, but I can provide general travel advice based on my training.";
+  }
+  
+  // Sort documents by similarity score if available
+  const sortedDocs = [...relevantDocs].sort((a, b) => 
+    (b.similarity || 0) - (a.similarity || 0)
+  );
+  
+  // For follow-up questions, be more concise with the context
+  const docsToInclude = isFollowUp ? sortedDocs.slice(0, 2) : sortedDocs;
+  
+  let ragContext = "Here is detailed information about travel destinations that might be relevant to the user's query:\n\n";
+  
+  docsToInclude.forEach((doc, index) => {
+    ragContext += `[Source ${index + 1}: ${doc.destination_name}]\n`;
+    
+    // For follow-up questions, include shorter excerpts
+    if (isFollowUp) {
+      // Extract the most relevant sections (first 2 paragraphs)
+      const paragraphs = doc.content.split('\n\n');
+      const excerpts = paragraphs.slice(0, 2).join('\n\n');
+      ragContext += `${excerpts}\n\n`;
+    } else {
+      ragContext += `${doc.content}\n\n`;
+    }
+  });
+  
+  if (isFollowUp && sortedDocs.length > 2) {
+    ragContext += `I also have information about ${sortedDocs.slice(2).map(d => d.destination_name).join(', ')}, which might be relevant.\n\n`;
+  }
+  
+  return ragContext;
+}
+
 // Generate system prompt based on conversation context and travel documents
-export function generateSystemPrompt(relevantDocs: any[], chatHistory: any[]) {
+export function generateSystemPrompt(relevantDocs: any[], chatHistory: any[], isFollowUp = false) {
   const preferences = extractTravelPreferences(chatHistory);
   
   // Prepare context from relevant documents
-  let ragContext = "";
-  if (relevantDocs.length > 0) {
-    ragContext = "Here is detailed information about travel destinations that might be relevant:\n\n" + 
-      relevantDocs.map((doc, index) => 
-        `[Destination ${index + 1}: ${doc.destination_name}]\n${doc.content}`
-      ).join("\n\n");
-  }
+  const ragContext = formatDocumentsForRAG(relevantDocs, isFollowUp);
 
   // Format detected preferences if any
   let preferencesContext = "";
@@ -116,7 +147,8 @@ When responding to users:
 - Include budget considerations when relevant
 - If you don't know something, be honest about it
 - Focus on providing practical travel information
-- If the user hasn't specified preferences, tactfully ask questions to understand their travel needs better`;
+- If the user hasn't specified preferences, tactfully ask questions to understand their travel needs better
+- Base your responses primarily on the travel information provided to you, and supplement with your general knowledge only when necessary`;
 
   return systemPrompt;
 }

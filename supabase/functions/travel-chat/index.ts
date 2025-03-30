@@ -5,7 +5,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 import { corsHeaders, validateEnvVars } from "./utils.ts";
 import { generateEmbeddingForDocument, batchGenerateEmbeddings } from "./embedding.ts";
-import { getRelevantDocuments, getChatHistory } from "./retrieval.ts";
+import { getRelevantDocuments, getChatHistory, analyzeConversationContext } from "./retrieval.ts";
 import { generateSystemPrompt } from "./prompt.ts";
 
 // Environment variables
@@ -82,9 +82,22 @@ serve(async (req) => {
       console.error("Failed to store user message:", error);
     }
 
-    // Get relevant docs and chat history
-    const relevantDocs = await getRelevantDocuments(message, supabase, anthropicApiKey);
+    // Get chat history first to analyze context
     const chatHistory = await getChatHistory(sessionId, supabase);
+    const { isFollowUp } = analyzeConversationContext(chatHistory);
+    
+    console.log(`Query analyzed as ${isFollowUp ? 'follow-up question' : 'new question'}`);
+    
+    // Get relevant docs based on analysis
+    const relevantDocs = await getRelevantDocuments(
+      // For follow-up questions, use more context from previous messages
+      isFollowUp ? 
+        chatHistory.slice(-3).filter(msg => msg.role === 'user').map(msg => msg.content).join(" ") : 
+        message, 
+      supabase, 
+      anthropicApiKey,
+      isFollowUp ? 3 : 5  // Get more docs for new questions, fewer for follow-ups
+    );
     
     // Format history for Claude
     const formattedHistory = chatHistory.map(msg => ({
@@ -93,13 +106,15 @@ serve(async (req) => {
     }));
 
     // Generate dynamic system prompt based on context
-    const systemPrompt = generateSystemPrompt(relevantDocs, chatHistory);
+    const systemPrompt = generateSystemPrompt(relevantDocs, chatHistory, isFollowUp);
 
     // Make API call to Claude with timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000); // 20-second timeout
     
     try {
+      console.log(`Calling Claude API with ${formattedHistory.length} messages...`);
+      
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -128,6 +143,8 @@ serve(async (req) => {
       const data = await response.json();
       const botResponse = data.content[0].text;
       
+      console.log("Received response from Claude, storing in chat history...");
+      
       // Store bot response
       try {
         await supabase.from('travel_chat_history').insert({
@@ -142,7 +159,11 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({ 
         response: botResponse,
-        sessionId 
+        sessionId,
+        sources: relevantDocs.map(doc => ({
+          name: doc.destination_name,
+          similarity: doc.similarity
+        }))
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
