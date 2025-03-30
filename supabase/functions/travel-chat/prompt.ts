@@ -164,7 +164,16 @@ export function isTravelRelated(query: string): { isTravelRelated: boolean; conf
     'python', 'java', 'c++', 'rust', 'golang', 'compiler', 'backend',
     'frontend', 'fullstack', 'web development', 'app development',
     'mobile app', 'operating system', 'linux', 'windows', 'macos',
-    'hack', 'exploit', 'vulnerability', 'cybersecurity', 'penetration testing'
+    'hack', 'exploit', 'vulnerability', 'cybersecurity', 'penetration testing',
+    'book', 'novel', 'movie', 'television', 'tv show', 'series', 'anime',
+    'game', 'gaming', 'video game', 'sport', 'sports', 'football', 'soccer',
+    'basketball', 'baseball', 'tennis', 'golf', 'cricket', 'rugby',
+    'healthcare', 'medicine', 'illness', 'disease', 'symptom', 'treatment',
+    'celebrity', 'actor', 'actress', 'director', 'singer', 'musician', 'band',
+    'history', 'philosophy', 'religion', 'spirituality', 'meditation',
+    'education', 'school', 'university', 'college', 'degree', 'course',
+    'homework', 'assignment', 'essay', 'thesis', 'dissertation',
+    'job', 'career', 'resume', 'interview', 'salary', 'workplace'
   ];
   
   // If any non-travel topic is explicitly mentioned, reduce confidence
@@ -175,8 +184,9 @@ export function isTravelRelated(query: string): { isTravelRelated: boolean; conf
     }
   });
   
+  // Higher threshold (0.3) to reduce false positives
   return {
-    isTravelRelated: adjustedConfidence > 0.2, // Threshold of 0.2 to determine if travel-related
+    isTravelRelated: adjustedConfidence > 0.3, 
     confidence: adjustedConfidence
   };
 }

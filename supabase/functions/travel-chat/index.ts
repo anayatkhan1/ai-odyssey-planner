@@ -89,21 +89,21 @@ serve(async (req) => {
     const topicCheck = isTravelRelated(message);
     console.log(`Topic check: Is travel related - ${topicCheck.isTravelRelated} (confidence: ${topicCheck.confidence.toFixed(2)})`);
     
+    // Store user message regardless of topic
+    try {
+      await supabase.from('travel_chat_history').insert({
+        session_id: sessionId,
+        user_id: userId || null,
+        role: 'user',
+        content: message
+      });
+    } catch (error) {
+      console.error("Failed to store user message:", error);
+    }
+    
     // If the message is not travel-related, return a polite but firm off-topic response
     if (!topicCheck.isTravelRelated) {
       console.log(`Off-topic message detected: "${message.slice(0, 30)}..."`);
-      
-      // Store user message
-      try {
-        await supabase.from('travel_chat_history').insert({
-          session_id: sessionId,
-          user_id: userId || null,
-          role: 'user',
-          content: message
-        });
-      } catch (error) {
-        console.error("Failed to store user message:", error);
-      }
       
       // Generate and store off-topic response
       const offTopicResponse = getOffTopicResponse(message);
@@ -130,18 +130,6 @@ serve(async (req) => {
     
     // If we get here, the message is travel-related, so continue with normal processing
     
-    // Store user message
-    try {
-      await supabase.from('travel_chat_history').insert({
-        session_id: sessionId,
-        user_id: userId || null,
-        role: 'user',
-        content: message
-      });
-    } catch (error) {
-      console.error("Failed to store user message:", error);
-    }
-
     // Get chat history first to analyze context
     const chatHistory = await getChatHistory(sessionId, supabase);
     const { isFollowUp } = analyzeConversationContext(chatHistory);
