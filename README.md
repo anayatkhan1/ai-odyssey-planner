@@ -1,69 +1,151 @@
-# Welcome to your Lovable project
 
-## Project info
+# AI Odyssey Planner
 
-**URL**: https://lovable.dev/projects/e97abad8-b254-431c-9760-a3a96bbd58de
+![AI Odyssey Planner](public/lovable-uploads/74ed74ec-931f-4987-88bb-8e6e8f3f6002.png)
 
-## How can I edit this code?
+## Overview
 
-There are several ways of editing your application.
+AI Odyssey Planner is an intelligent travel planning application that uses AI to create personalized travel itineraries. The platform analyzes millions of data points to recommend destinations, activities, and accommodations based on user preferences, budget constraints, and schedule.
 
-**Use Lovable**
+## Key Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e97abad8-b254-431c-9760-a3a96bbd58de) and start prompting.
+- **AI-Powered Travel Recommendations**: Leverages Claude AI (Anthropic) to generate personalized travel suggestions
+- **Interactive Travel Chat**: Real-time conversation with an AI assistant specialized in travel planning
+- **Destination Exploration**: Browse and discover curated destinations with detailed information
+- **User Authentication**: Secure account creation and management through Supabase
+- **Error Monitoring**: Comprehensive error tracking and reporting with Sentry
+- **Responsive Design**: Optimized user experience across desktop and mobile devices
 
-Changes made via Lovable will be committed automatically to this repo.
+## Technologies
 
-**Use your preferred IDE**
+### Frontend
+- **React**: UI library for building the user interface
+- **TypeScript**: Type-safe JavaScript for robust development
+- **Tailwind CSS**: Utility-first CSS framework for styling
+- **Shadcn/UI**: High-quality UI components for the interface
+- **Framer Motion**: Animation library for smooth transitions
+- **React Router**: Navigation and routing solution
+- **TanStack Query**: Data fetching and state management
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend (Serverless)
+- **Supabase**: Backend-as-a-Service platform providing:
+  - PostgreSQL database for data storage
+  - Authentication and user management
+  - Edge Functions for serverless API endpoints
+  - Row-Level Security for data protection
+  - Vector database for semantic search
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### AI Integration
+- **Anthropic Claude API**: Powers the intelligent travel assistant
+  - Natural language conversation capabilities
+  - Context-aware travel recommendations
+  - Semantic understanding of travel preferences
 
-Follow these steps:
+### Monitoring & Error Tracking
+- **Sentry**: Complete application monitoring
+  - Real-time error tracking and alerting
+  - Performance monitoring
+  - User session tracking for debugging
+  - Environment-based configuration
+
+## Architecture
+
+The application follows a modern web architecture:
+
+1. **Client-Side Application**: React single-page application (SPA) that handles UI rendering and state management
+2. **Serverless Backend**: Supabase for data storage, authentication, and serverless functions
+3. **AI Integration**: Edge functions that communicate with Anthropic's Claude API
+4. **Monitoring Layer**: Sentry for error tracking and application performance monitoring
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js & npm - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Supabase account
+- Anthropic API key
+- Sentry account
+
+### Local Development
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Clone the repository
+git clone <REPOSITORY_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd ai-odyssey-planner
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Set up environment variables
+# Create a .env file with the necessary API keys and configuration
+
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+VITE_SENTRY_DSN=your_sentry_dsn
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-**Use GitHub Codespaces**
+### Supabase Edge Functions
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+For the travel chat functionality, the following environment variables need to be set in the Supabase Edge Functions settings:
 
-## What technologies are used for this project?
+- `ANTHROPIC_API_KEY`: Your Anthropic Claude API key
+- `SUPABASE_URL`: Your Supabase project URL (set automatically)
+- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key (set automatically)
 
-This project is built with .
+## Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The application can be deployed using Lovable or any other modern hosting platform:
 
-## How can I deploy this project?
+1. Open [Lovable](https://lovable.dev/projects/e97abad8-b254-431c-9760-a3a96bbd58de) and click on Share -> Publish
+2. For custom domains, follow the [Custom Domains documentation](https://docs.lovable.dev/tips-tricks/custom-domain/)
 
-Simply open [Lovable](https://lovable.dev/projects/e97abad8-b254-431c-9760-a3a96bbd58de) and click on Share -> Publish.
+## Error Monitoring with Sentry
 
-## I want to use a custom domain - is that possible?
+The application uses Sentry for comprehensive error tracking:
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- Automatic error capturing in all environments
+- User identification for context-aware debugging
+- Environment-specific configuration
+- Debug mode for detailed error information
+
+## Project Structure
+
+```
+ai-odyssey-planner/
+├── public/                   # Static assets
+├── src/
+│   ├── components/           # Reusable UI components
+│   │   ├── travel/           # Travel-specific components
+│   │   └── ui/               # shadcn/ui components
+│   ├── contexts/             # React context providers
+│   ├── hooks/                # Custom React hooks
+│   ├── integrations/         # Third-party integrations
+│   │   └── supabase/         # Supabase client and types
+│   ├── lib/                  # Utility libraries
+│   │   └── sentry.ts         # Sentry configuration
+│   └── pages/                # Application pages/routes
+├── supabase/                 # Supabase configuration
+│   └── functions/            # Edge functions
+│       └── travel-chat/      # Travel chat AI assistant
+└── index.html                # Entry HTML file
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
