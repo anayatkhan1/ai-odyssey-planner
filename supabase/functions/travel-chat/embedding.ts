@@ -7,7 +7,7 @@ export async function getEmbeddings(text: string, anthropicApiKey: string) {
     console.log(`Getting embeddings for: "${text.slice(0, 50)}..."`);
     
     if (!anthropicApiKey || anthropicApiKey.trim() === '') {
-      throw new Error("Anthropic API key is not configured");
+      throw new Error("Anthropic API key is not configured or is empty");
     }
     
     const response = await fetch('https://api.anthropic.com/v1/embeddings', {
@@ -51,6 +51,10 @@ export async function generateEmbeddingForDocument(
     
     if (!content || content.trim() === '') {
       throw new Error("Empty content provided for embedding generation");
+    }
+    
+    if (!anthropicApiKey || anthropicApiKey.trim() === '') {
+      throw new Error("Anthropic API key is not configured or is empty");
     }
     
     // Get embedding from Anthropic

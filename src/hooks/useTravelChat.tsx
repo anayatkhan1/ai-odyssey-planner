@@ -18,6 +18,7 @@ export const useTravelChat = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
   
   useEffect(() => {
     const storedSessionId = localStorage.getItem('travelChatSessionId');
@@ -29,7 +30,28 @@ export const useTravelChat = () => {
       setSessionId(newSessionId);
       localStorage.setItem('travelChatSessionId', newSessionId);
     }
+
+    // Check if we have proper API configuration
+    checkApiConfiguration();
   }, []);
+
+  const checkApiConfiguration = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('travel-chat', {
+        body: {
+          action: 'check_api_config'
+        },
+      });
+      
+      if (error || (data && data.error)) {
+        setIsApiKeyMissing(true);
+        console.warn("API configuration issue:", data?.error || error);
+      }
+    } catch (err) {
+      console.error("Error checking API configuration:", err);
+      setIsApiKeyMissing(true);
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -81,6 +103,15 @@ export const useTravelChat = () => {
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
     
+    if (isApiKeyMissing) {
+      toast({
+        title: "API Key Missing",
+        description: "Anthropic API key is not configured. Please add it in your Supabase edge function settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const userMessage = {
       role: 'user' as const,
       content: input.trim(),
@@ -129,13 +160,23 @@ export const useTravelChat = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       
-      // Show error toast only on first attempt
-      if (retryCount === 0) {
+      // Check if error is related to API key
+      if (error.message && error.message.includes('API key')) {
+        setIsApiKeyMissing(true);
         toast({
-          title: "Error sending message",
-          description: "Could not process your message. Retrying...",
+          title: "API Key Issue",
+          description: "There's a problem with the Anthropic API key. Please check your configuration.",
           variant: "destructive",
         });
+      } else {
+        // Show error toast only on first attempt
+        if (retryCount === 0) {
+          toast({
+            title: "Error sending message",
+            description: "Could not process your message. Retrying...",
+            variant: "destructive",
+          });
+        }
       }
       
       // Track retry attempts
@@ -228,6 +269,7 @@ export const useTravelChat = () => {
     messagesEndRef,
     inputRef,
     quickPrompts,
+    isApiKeyMissing,
     setInput,
     setIsChatOpen,
     setIsFullscreen,

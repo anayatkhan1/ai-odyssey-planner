@@ -12,6 +12,12 @@ export async function getRelevantDocuments(
 ) {
   try {
     console.log(`Finding relevant documents for query: ${query.slice(0, 30)}...`);
+    
+    if (!anthropicApiKey || anthropicApiKey.trim() === '') {
+      console.error("Anthropic API key is not configured or is empty");
+      return [];
+    }
+    
     const embedding = await getEmbeddings(query, anthropicApiKey);
     
     if (!embedding) {

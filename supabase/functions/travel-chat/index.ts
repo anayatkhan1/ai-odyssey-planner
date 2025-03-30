@@ -31,6 +31,21 @@ serve(async (req) => {
     
     const reqData = await req.json();
     
+    // Handle API configuration check
+    if (reqData.action === 'check_api_config') {
+      if (!anthropicApiKey || anthropicApiKey.trim() === '') {
+        return new Response(JSON.stringify({ 
+          error: "Anthropic API key is not configured" 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      return new Response(JSON.stringify({ configured: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     // Handle embedding generation
     if (reqData.action === 'generate_embedding') {
       const { document_id, content } = reqData;
