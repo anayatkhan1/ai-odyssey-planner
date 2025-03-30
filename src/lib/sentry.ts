@@ -11,7 +11,7 @@ export const initSentry = () => {
     tracesSampleRate: 1.0,
     
     // Capture errors in development mode only if DSN is provided
-    enabled: import.meta.env.PROD || !!import.meta.env.VITE_SENTRY_DSN,
+    enabled: true, // Enable in all environments to test
     
     // Customize behavior based on environment
     environment: import.meta.env.MODE,
@@ -19,13 +19,21 @@ export const initSentry = () => {
     // Don't send PII data
     sendDefaultPii: false,
     
+    // Add debug mode to see what's happening
+    debug: true,
+    
+    // Use more comprehensive integrations
+    integrations: [
+      new Sentry.Replay({
+        // Additional SDK configuration goes in here, for example:
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
+    
     // Adjust this based on your needs
     beforeSend(event) {
-      // Don't send errors if we're in dev and no DSN is configured
-      if (!import.meta.env.PROD && !import.meta.env.VITE_SENTRY_DSN) {
-        return null;
-      }
-      
+      console.log('Sending event to Sentry:', event);
       return event;
     },
   });
@@ -38,6 +46,9 @@ export const logError = (error: unknown, context?: Record<string, any>) => {
   Sentry.captureException(error, {
     extra: context,
   });
+  
+  // Log confirmation to console for debugging
+  console.log('Error reported to Sentry with context:', context);
 };
 
 // Create a user scope for better tracking
@@ -47,9 +58,11 @@ export const setUserScope = (userId?: string, email?: string) => {
       id: userId,
       email: email,
     });
+    console.log('Sentry user scope set:', { userId, email });
   } else {
     // Clear the user from the scope to stop tracking them
     Sentry.setUser(null);
+    console.log('Sentry user scope cleared');
   }
 };
 
